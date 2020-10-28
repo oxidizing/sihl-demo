@@ -1,0 +1,4 @@
+(executable
+  (name demo)
+  (libraries
+   sihl))
