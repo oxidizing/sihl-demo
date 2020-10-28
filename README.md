@@ -13,6 +13,10 @@ If you want to run this demo application locally, you will need `dune` and `opam
    ```
    opam install -y . --deps-only --with-doc --with-test --locked --unlock-base
    ```
+## TODO
+- Makefile commands
+- Docker commands
+- Postgres dependencies
 
 ## Why pizza?
 Why not? :)
