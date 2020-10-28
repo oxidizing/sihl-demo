@@ -9,7 +9,10 @@ If you want to run this demo application locally, you will need `dune` and `opam
    ```
    dune build
    ```
-2. Install all dependencies as proposed by `dune`.
+2. Install all dependencies as proposed by `dune`. If you want to install all dependencies manually, run
+   ```
+   opam install -y . --deps-only --with-doc --with-test --locked --unlock-base
+   ```
 
 ## Why pizza?
 Why not? :)
