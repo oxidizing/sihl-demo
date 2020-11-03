@@ -24,4 +24,7 @@
   ;; General system dependencies
   (dune (>= 2.7))
   (ocaml (>= 4.08.0))
-  (sihl (>= 0.1.5))))
+  (sihl (>= 0.1.7))
+  (sihl-email (>= 0.1.7))
+  (sihl-queue (>= 0.1.7))
+  (sihl-storage (>= 0.1.7))))
