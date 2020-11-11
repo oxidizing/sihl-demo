@@ -13,8 +13,9 @@ let () =
     (fun configuration ->
       configuration |> Sihl.Core.Configuration.data |> Sihl.Core.Configuration.store)
     configurations;
+  Unix.putenv "SIHL_ENV" "test";
   Lwt_main.run
     (let* _ = Sihl.Core.Container.start_services services in
      let* () = Service.Migration.run_all ctx in
-     Alcotest_lwt.run "e2e" @@ test_suite)
+     Alcotest_lwt.run "e2e tests" @@ test_suite)
 ;;
