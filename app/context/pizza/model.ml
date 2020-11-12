@@ -1,23 +1,22 @@
+(* This defines our pizza model *)
+(* These models are pure and are used by other parts of the application, like the services *)
 type t =
   { id : string
   ; name : string
+  ; ingredients : string list
   ; created_at : Ptime.t
   ; updated_at : Ptime.t
   }
-[@@deriving fields, show, eq]
+(* We use some ppx for convenience *)
+(* make is used to construct a pizza model from data fetched from the database *)
+[@@deriving fields, show, eq, make]
 
-let create ~name =
-  { id = Database.Id.random () |> Database.Id.to_string
+(* This creates a pizza model with a randomized id *)
+let create name ingredients =
+  { id = Sihl.Database.Id.random () |> Sihl.Database.Id.to_string
   ; name
+  ; ingredients
   ; created_at = Ptime_clock.now ()
   ; updated_at = Ptime_clock.now ()
   }
-;;
-
-let t =
-  let encode m = Ok (m.id, (m.name, (m.created_at, m.updated_at))) in
-  let decode (id, (name, (created_at, updated_at))) =
-    Ok { id; name; created_at; updated_at }
-  in
-  Caqti_type.(custom ~encode ~decode (tup2 string (tup2 string (tup2 ptime ptime))))
 ;;

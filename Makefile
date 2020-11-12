@@ -7,7 +7,7 @@ clean:
 	opam exec -- dune clean
 
 test:
-	SIHL_ENV=test opam exec -- dune test
+	opam exec -- dune test
 
 test-slow:
-	SIHL_ENV=test opam exec -- dune build @runtest-all --force test
+	opam exec -- dune build @runtest-all --force test
