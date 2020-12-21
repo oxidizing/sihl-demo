@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # default user is "opam"
+      - ..:/workspace:cached
+      - opam:/home/opam/.opam:cached
+      - ${HOME}${USERPROFILE}/.ssh:/home/opam/.ssh
+      - ${HOME}${USERPROFILE}/.gitconfig:/home/opam/.gitconfig
+      - ${HOME}${USERPROFILE}/.gitignore_global:/home/opam/.gitignore_global
+    depends_on: [postgres]
+    links: [postgres:db]
+    ports: [3000:3000]
+    command: /bin/sh -c "while sleep 1000; do :; done"
+
+  postgres:
+    image: postgres:12.2
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dev
+    volumes:
+      - ./database:/var/lib/postgresql/data
+    ports: [5432:5432]
+
+  adminer:
+    image: adminer:4.7.6-standalone
+    restart: always
+    ports: [8080:8080]
+    links: [postgres:db]
+
+volumes:
+  opam:
