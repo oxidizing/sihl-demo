@@ -13,6 +13,22 @@ If you want to run this demo application locally, you will need `dune` and `opam
    ```
    opam install -y . --deps-only --with-doc --with-test --locked --unlock-base
    ```
+
+### VSCode setup
+
+#### Requirements
+
+This project is setup to run in a DevContainer. Ensure requirements to run in a DevContainer:
+
+1. [Docker](/Technologies/Docker) installed
+1. [Visual Studio Code](https://code.visualstudio.com/) (VS Code) installed
+1. VS Code Extension [Remote Container](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed
+
+#### Start DevContainer
+
+Click on the icon similar to "><" in the bottom left corner and select `Remote-Containers: Reopen in Container`.
+If any changes were made to files in `.devcontainer` folder the Container should be rebuilt (`Remote-Containers: Rebuild Container`)
+
 ## TODO
 - Makefile commands
 - Docker commands

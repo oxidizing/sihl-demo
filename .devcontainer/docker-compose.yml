@@ -9,9 +9,9 @@ services:
       # default user is "opam"
       - ..:/workspace:cached
       - opam:/home/opam/.opam:cached
-      - ${HOME}${USERPROFILE}/.ssh:/home/opam/.ssh
-      - ${HOME}${USERPROFILE}/.gitconfig:/home/opam/.gitconfig
-      - ${HOME}${USERPROFILE}/.gitignore_global:/home/opam/.gitignore_global
+      # - ${HOME}${USERPROFILE}/.ssh:/home/opam/.ssh
+      # - ${HOME}${USERPROFILE}/.gitconfig:/home/opam/.gitconfig
+      # - ${HOME}${USERPROFILE}/.gitignore_global:/home/opam/.gitignore_global
     depends_on: [postgres]
     links: [postgres:db]
     ports: [3000:3000]
