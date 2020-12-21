@@ -1,10 +1,10 @@
 (* Kernel Services *)
-module Database = Sihl.Database.Service
-module Repository = Sihl.Repository.Service
+module Database = Sihl.Service.Database
+module Repository = Sihl.Service.Repository
 
 (* Repositories *)
-module MigrationRepo = Sihl.Migration.Service.Repo.MakePostgreSql (Database)
+module MigrationRepo = Sihl.Service.Migration_repo.PostgreSql
 
 (* Services *)
-module Migration = Sihl.Migration.Service.Make (MigrationRepo)
-module Http = Sihl.Http.Service
+module Migration = Sihl.Service.Migration.Make (MigrationRepo)
+module Http = Sihl.Service.Http

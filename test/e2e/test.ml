@@ -4,18 +4,10 @@ let test_suite = []
 let services = []
 
 let () =
-  Logs.set_reporter (Sihl.Core.Log.default_reporter ());
-  let ctx = Sihl.Core.Ctx.create () in
-  let configurations =
-    List.map (fun service -> Sihl.Core.Container.Service.configuration service) services
-  in
-  List.iter
-    (fun configuration ->
-      configuration |> Sihl.Core.Configuration.data |> Sihl.Core.Configuration.store)
-    configurations;
+  Logs.set_reporter Sihl.Log.default_reporter;
   Unix.putenv "SIHL_ENV" "test";
   Lwt_main.run
-    (let* _ = Sihl.Core.Container.start_services services in
-     let* () = Service.Migration.run_all ctx in
+    (let* _ = Sihl.Container.start_services services in
+     let* () = Service.Migration.run_all () in
      Alcotest_lwt.run "e2e tests" @@ test_suite)
 ;;

@@ -35,11 +35,11 @@ let get_ingredients_for_pizza_request =
           updated_at
         FROM pizzas_ingredients
        WHERE pizza_id = ?::uuid
-        |sql}
+    |sql}
 ;;
 
-let get_ingredients_for_pizza ctx ~id =
-  Service.Database.query ctx (fun connection ->
+let get_ingredients_for_pizza ~id =
+  Service.Database.query (fun connection ->
       let module Connection = (val connection : Caqti_lwt.CONNECTION) in
       let* ingredients = Connection.collect_list get_ingredients_for_pizza_request id in
       match ingredients with
@@ -62,7 +62,7 @@ let insert_request_pizzas =
           $3,
           $4
         )
-        |sql}
+    |sql}
 ;;
 
 let insert_request_pizzas_ingredients =
@@ -80,17 +80,17 @@ let insert_request_pizzas_ingredients =
           $3,
           $4
         )
-        |sql}
+    |sql}
 ;;
 
-let insert_pizza ctx pizza =
+let insert_pizza pizza =
   let pizza_ingredients =
     List.map (fun ingr -> pizza.Model.id, ingr) pizza.Model.ingredients
   in
   let pizza_tup =
     pizza.Model.id, pizza.Model.name, pizza.Model.created_at, pizza.Model.updated_at
   in
-  Service.Database.transaction ctx (fun connection ->
+  Service.Database.transaction (fun connection ->
       let module Connection = (val connection : Caqti_lwt.CONNECTION) in
       let* res = Connection.exec insert_request_pizzas pizza_tup in
       let () =
@@ -116,7 +116,7 @@ let insert_pizza ctx pizza =
       in
       let* id, name, created_at, updated_at = get_pizza connection ~id:pizza.Model.id in
       let* ingredients =
-        get_ingredients_for_pizza ctx ~id:pizza.Model.id
+        get_ingredients_for_pizza ~id:pizza.Model.id
         |> Lwt.map (List.map (fun (_, ingr, _, _) -> ingr))
       in
       Lwt.return @@ Model.make ~id ~name ~ingredients ~created_at ~updated_at ())
@@ -124,8 +124,8 @@ let insert_pizza ctx pizza =
 
 let clean_request = Caqti_request.exec Caqti_type.unit "TRUNCATE TABLE pizzas CASCADE;"
 
-let clean ctx =
-  Service.Database.query ctx (fun (module Connection : Caqti_lwt.CONNECTION) ->
+let clean () =
+  Service.Database.query (fun (module Connection : Caqti_lwt.CONNECTION) ->
       let* cleaned = Connection.exec clean_request () in
       match cleaned with
       | Ok cleaned -> Lwt.return cleaned
