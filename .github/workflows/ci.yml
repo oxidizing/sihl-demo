@@ -43,7 +43,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y libpq-dev
+          sudo apt-get install -y libpq-dev libev-dev
           opam pin add -y .
           opam depext -y demo
       - name: Install dependencies
