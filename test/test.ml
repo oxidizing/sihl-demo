@@ -26,11 +26,40 @@ let delete_ingredient _ () =
   Lwt.return ()
 ;;
 
+let create_pizza_without_ingredients _ () =
+  let* () = Sihl.Cleaner.clean_all () in
+  let* () = Pizza.clean () in
+  let* _ = Pizza.create "boring" [] in
+  let* (pizza : Pizza.t) = Pizza.find "boring" |> Lwt.map Option.get in
+  Alcotest.(check string "created boring pizza" "boring" pizza.Pizza.name);
+  Lwt.return ()
+;;
+
+let create_pizza_with_ingredients _ () =
+  let* () = Sihl.Cleaner.clean_all () in
+  let* () = Pizza.clean () in
+  let* _ = Pizza.create "prosciutto" [ "ham"; "tomato" ] in
+  let* (pizza : Pizza.t) = Pizza.find "prosciutto" |> Lwt.map Option.get in
+  Alcotest.(check string "created prosciutto" "prosciutto" pizza.Pizza.name);
+  let ingredients =
+    List.map
+      ~f:(fun (ingredient : Pizza.ingredient) -> ingredient.Pizza.name)
+      pizza.Pizza.ingredients
+  in
+  Alcotest.(check (list string) "has ingredients" [ "ham"; "tomato" ] ingredients);
+  Lwt.return ()
+;;
+
 let suite =
   Alcotest_lwt.
     [ ( "delicious test suite"
       , [ test_case "create ingredient" `Quick create_ingredient
         ; test_case "delete ingredient" `Quick delete_ingredient
+        ; test_case
+            "create pizza without ingredients"
+            `Quick
+            create_pizza_without_ingredients
+        ; test_case "create pizza with ingredients" `Quick create_pizza_with_ingredients
         ] )
     ]
 ;;
