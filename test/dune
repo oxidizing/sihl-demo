@@ -1,3 +1,4 @@
 (test
  (name test)
- (libraries sihl service database alcotest alcotest-lwt caqti-driver-postgresql pizza))
+ (libraries sihl service database alcotest alcotest-lwt
+   caqti-driver-postgresql pizza))

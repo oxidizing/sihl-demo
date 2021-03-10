@@ -6,16 +6,21 @@ on: [push, pull_request]
 jobs:
   build:
     name: Build and test
-
     runs-on: ${{ matrix.os }}
-
+    services:
+      postgres:
+        image: postgres:12.2
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: dev
+        ports:
+          - 5432:5432
     strategy:
       fail-fast: false
       matrix:
         os:
-          - macos-latest
           - ubuntu-latest
-          - windows-latest
         ocaml-version:
           - 4.11.1
 
@@ -42,7 +47,7 @@ jobs:
         run: opam pin add pizza.dev . --no-action
 
       - name: Query and install external dependencies
-        run: opam depext pizza --yes --with-doc --with-test
+        run: opam depext pizza --yes --with-doc 
 
       - name: Install dependencies
         if: steps.cache-opam.outputs.cache-hit != 'true'

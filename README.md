@@ -1,8 +1,6 @@
-# pizza
+# Sihl Demo App
 
-[![Actions Status](https://github.com/jerben/pizza/workflows/CI/badge.svg)](https://github.com/jerben/pizza/actions)
-
-A restaurant serving Pizza and sometimes Lasagna
+A restaurant serving Pizza and sometimes Lasagna, delicious Lasagna.
 
 ## Contributing
 
