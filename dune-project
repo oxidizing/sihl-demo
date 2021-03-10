@@ -1,30 +1,33 @@
-(lang dune 2.7)
-(generate_opam_files true)
+(lang dune 2.0)
 
-(name demo)
-(version 0.0.1)
+(name pizza)
+
+(documentation "https://oxidizing.github.io/pizza/")
+
+(source
+ (github oxidizing/pizza))
+
+(license MIT)
 
 (authors
-  "Josef Erben"
-  "Aron Erben"
-  "Miko Nieminen")
+  "Josef Erben")
 
-(source (github oxidizing/sihl-demo))
-(license MIT)
-(maintainers "josef@oxidizing.io")
-(homepage "https://github.com/oxidizing/sihl-demo")
-(bug_reports "https://github.com/oxidizing/sihl-demo/issues")
-(documentation "https://oxidizing.github.io/sihl/")
+(maintainers
+  "Josef Erben")
+
+(generate_opam_files true)
 
 (package
- (name demo)
- (synopsis "A small demo application written in Sihl")
- (description "This demo showcases all aspects of Sihl and gives examples for each feature.")
+ (name pizza)
+ (synopsis "A restaurant serving Pizza and sometimes Lasagna")
+ (description "\
+A restaurant serving Pizza and sometimes Lasagna
+")
  (depends
-  ;; General system dependencies
-  (dune (>= 2.7))
   (ocaml (>= 4.08.0))
-  (sihl (>= 0.1.7))
-  (sihl-email (>= 0.1.7))
-  (sihl-queue (>= 0.1.7))
-  (sihl-storage (>= 0.1.7))))
+  dune
+  (sihl (= 0.3.0~rc2))
+  (tyxml-ppx (>= 4.4.0))
+  (caqti-driver-postgresql (>= 1.2.1))
+  (alcotest-lwt :with-test)
+  (odoc :with-doc)))
