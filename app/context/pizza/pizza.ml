@@ -11,20 +11,26 @@ let clean =
   else Repo.clean
 ;;
 
-let create_ingredient name : ingredient Lwt.t =
-  let open Lwt.Syntax in
-  let ingredient = create_ingredient name in
-  let* () = Repo.insert_ingredient ingredient in
-  let* ingredient = Repo.find_ingredient name in
-  match ingredient with
-  | Some ingredient -> Lwt.return ingredient
-  | None ->
-    Logs.err (fun m -> m "Failed to create ingredient '%s'" name);
-    raise @@ Exception "Failed to create ingredient"
-;;
-
 let find_ingredient name = Repo.find_ingredient name
 let find_ingredients = Repo.find_ingredients
+
+let create_ingredient name : (ingredient, string) Result.t Lwt.t =
+  let open Lwt.Syntax in
+  let* ingredient = find_ingredient name in
+  match ingredient with
+  | None ->
+    let ingredient = create_ingredient name in
+    let* () = Repo.insert_ingredient ingredient in
+    let* ingredient = Repo.find_ingredient name in
+    (match ingredient with
+    | Some ingredient -> Lwt.return (Ok ingredient)
+    | None ->
+      Logs.err (fun m -> m "Failed to create ingredient '%s'" name);
+      raise @@ Exception "Failed to create ingredient")
+  | Some ingredient ->
+    Lwt.return (Error (Format.sprintf "Ingredient '%s' already exists" ingredient.name))
+;;
+
 let delete_ingredient (ingredient : ingredient) = Repo.delete_ingredient ingredient
 
 let add_ingredient_to_pizza (pizza : string) (ingredient : ingredient) =

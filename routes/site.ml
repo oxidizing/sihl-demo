@@ -6,17 +6,17 @@
 (* Public section *)
 let welcome = Sihl.Web.Http.get "/" Handler.Welcome.index
 let ingredient_index = Sihl.Web.Http.get "/ingredients" Handler.Ingredients.index
-let ingredient_create = Sihl.Web.Http.put "/ingredients" Handler.Ingredients.create
+let ingredient_create = Sihl.Web.Http.post "/ingredients" Handler.Ingredients.create
 let ingredient_delete = Sihl.Web.Http.delete "/ingredients/:id" Handler.Ingredients.delete
 let pizza_index = Sihl.Web.Http.get "/pizzas" Handler.Pizzas.index
-let pizza_create = Sihl.Web.Http.put "/pizzas" Handler.Pizzas.index
+let pizza_create = Sihl.Web.Http.post "/pizzas" Handler.Pizzas.index
 let pizza_delete = Sihl.Web.Http.delete "/pizzas/:id" Handler.Pizzas.delete
 
 (* Customer section *)
 let login = Sihl.Web.Http.get "/login" Handler.Customers.login
 let registration = Sihl.Web.Http.get "/login" Handler.Customers.registration
 let order_index = Sihl.Web.Http.get "/orders" Handler.Customers.Order.index
-let order_create = Sihl.Web.Http.put "/orders/:id" Handler.Customers.Order.create
+let order_create = Sihl.Web.Http.post "/orders/:id" Handler.Customers.Order.create
 let order_delete = Sihl.Web.Http.delete "/orders/:id" Handler.Customers.Order.delete
 
 let middlewares =

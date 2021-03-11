@@ -19,7 +19,7 @@ val clean : unit -> unit Lwt.t
 
 val find_ingredient : string -> ingredient option Lwt.t
 val find_ingredients : unit -> ingredient list Lwt.t
-val create_ingredient : string -> ingredient Lwt.t
+val create_ingredient : string -> (ingredient, string) result Lwt.t
 val delete_ingredient : ingredient -> unit Lwt.t
 
 (** Pizzas *)

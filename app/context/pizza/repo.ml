@@ -277,6 +277,7 @@ let delete_pizza_request =
 ;;
 
 let delete_pizza (pizza : Model.t) : unit Lwt.t =
+  (* We don't need to remove the pizzas_ingredients entry because of CASCADING *)
   Sihl.Database.query' (fun connection ->
       let module Connection = (val connection : Caqti_lwt.CONNECTION) in
       Connection.exec delete_pizza_request pizza.Model.name)
