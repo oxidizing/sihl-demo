@@ -1,8 +1,15 @@
 include Model
 
-let clean = Repo.clean
-
 exception Exception of string
+
+let clean =
+  if Sihl.Configuration.is_production ()
+  then
+    raise
+    @@ Exception
+         "Can not clean repository in production, this is most likely not what you want"
+  else Repo.clean
+;;
 
 let create_ingredient name : ingredient Lwt.t =
   let open Lwt.Syntax in
