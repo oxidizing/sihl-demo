@@ -29,4 +29,19 @@ let create req =
       |> Lwt.return)
 ;;
 
-let delete _ = failwith "todo"
+let delete req =
+  let open Lwt.Syntax in
+  let name = Sihl.Web.Router.param req "name" in
+  let* ingredient = Pizza.find_ingredient name in
+  match ingredient with
+  | None ->
+    Sihl.Web.Response.redirect_to "/ingredients"
+    |> Sihl.Web.Flash.set_notice (Some (Format.sprintf "Ingredient '%s' not found" name))
+    |> Lwt.return
+  | Some ingredient ->
+    let* () = Pizza.delete_ingredient ingredient in
+    Sihl.Web.Response.redirect_to "/ingredients"
+    |> Sihl.Web.Flash.set_notice
+         (Some (Format.sprintf "Ingredient '%s' removed" ingredient.Pizza.name))
+    |> Lwt.return
+;;

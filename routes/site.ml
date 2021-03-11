@@ -7,10 +7,14 @@
 let welcome = Sihl.Web.Http.get "/" Handler.Welcome.index
 let ingredient_index = Sihl.Web.Http.get "/ingredients" Handler.Ingredients.index
 let ingredient_create = Sihl.Web.Http.post "/ingredients" Handler.Ingredients.create
-let ingredient_delete = Sihl.Web.Http.delete "/ingredients/:id" Handler.Ingredients.delete
+
+let ingredient_delete =
+  Sihl.Web.Http.post "/ingredients/:name/delete" Handler.Ingredients.delete
+;;
+
 let pizza_index = Sihl.Web.Http.get "/pizzas" Handler.Pizzas.index
 let pizza_create = Sihl.Web.Http.post "/pizzas" Handler.Pizzas.index
-let pizza_delete = Sihl.Web.Http.delete "/pizzas/:id" Handler.Pizzas.delete
+let pizza_delete = Sihl.Web.Http.delete "/pizzas/:name" Handler.Pizzas.delete
 
 (* Customer section *)
 let login = Sihl.Web.Http.get "/login" Handler.Customers.login

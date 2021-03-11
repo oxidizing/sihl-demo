@@ -1,6 +1,6 @@
 open Tyxml
 
-let%html form csrf =
+let%html create_form csrf =
   {|
 <form action="/ingredients" method="Post">
   <input type="hidden" name="csrf" value="|}
@@ -8,6 +8,19 @@ let%html form csrf =
     {|">
   <input name="name">
   <input type="submit" value="Create">
+</form>
+|}
+;;
+
+let%html delete_button (ingredient : Pizza.ingredient) csrf =
+  {|
+<form action="|}
+    (Format.sprintf "/ingredients/%s/delete" ingredient.Pizza.name)
+    {|" method="Post">
+  <input type="hidden" name="csrf" value="|}
+    csrf
+    {|">
+  <input type="submit" value="Delete">
 </form>
 |}
 ;;
@@ -23,6 +36,8 @@ let index ~alert ~notice csrf (ingredients : Pizza.ingredient list) =
             [ Html.txt (Ptime.to_rfc3339 ingredient.Pizza.created_at) ]
             {|</td><td>|}
             [ Html.txt (Ptime.to_rfc3339 ingredient.Pizza.updated_at) ]
+            {|</td><td>|}
+            [ delete_button ingredient csrf ]
             {|</td></tr>|}])
       ingredients
   in
@@ -36,5 +51,5 @@ let index ~alert ~notice csrf (ingredients : Pizza.ingredient list) =
   let ingredients =
     [%html {|<table><tbody>|} (List.cons list_header list_items) {|</tbody></table>|}]
   in
-  Layout.page [ alert_message; notice_message; form csrf; ingredients ]
+  Layout.page [ alert_message; notice_message; create_form csrf; ingredients ]
 ;;
