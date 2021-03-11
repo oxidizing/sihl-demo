@@ -187,3 +187,18 @@ let add_ingredient_to_pizza pizza ingredient =
       let module Connection = (val connection : Caqti_lwt.CONNECTION) in
       Connection.exec insert_pizza_ingredient_request (pizza, ingredient))
 ;;
+
+let delete_pizza_request =
+  Caqti_request.exec
+    Caqti_type.string
+    {sql|
+        DELETE FROM pizzas
+        WHERE name = ?
+        |sql}
+;;
+
+let delete_pizza (pizza : Model.t) : unit Lwt.t =
+  Sihl.Database.query' (fun connection ->
+      let module Connection = (val connection : Caqti_lwt.CONNECTION) in
+      Connection.exec delete_pizza_request pizza.Model.name)
+;;

@@ -39,7 +39,12 @@ let create_pizzas_ingredients_table =
        ingredient_id INTEGER NOT NULL,
        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-     UNIQUE (pizza_id, ingredient_id)
+     UNIQUE (pizza_id, ingredient_id),
+     CONSTRAINT fk_pizza
+       FOREIGN KEY (pizza_id) REFERENCES pizzas (id)
+       ON DELETE CASCADE,
+     CONSTRAINT fk_ingredient
+       FOREIGN KEY (ingredient_id) REFERENCES ingredients (id)
      );
      |sql}
 ;;

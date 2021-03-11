@@ -66,3 +66,4 @@ let create name (ingredients : string list) : t Lwt.t =
 ;;
 
 let find name = Repo.find_pizza name
+let delete (pizza : t) : unit Lwt.t = Repo.delete_pizza pizza
