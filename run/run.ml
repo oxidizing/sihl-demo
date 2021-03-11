@@ -14,4 +14,6 @@ let services =
   ]
 ;;
 
-let () = Sihl.App.(empty |> with_services services |> run ~commands:[])
+let () =
+  Sihl.App.(empty |> with_services services |> run ~commands:[ Command.Create_pizza.run ])
+;;
