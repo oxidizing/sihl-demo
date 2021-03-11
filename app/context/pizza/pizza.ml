@@ -24,53 +24,25 @@ let create_ingredient name : ingredient Lwt.t =
 ;;
 
 let find_ingredient name = Repo.find_ingredient name
+let find_ingredients = Repo.find_ingredients
 let delete_ingredient (ingredient : ingredient) = Repo.delete_ingredient ingredient
-
-let rec create_ingredients_if_not_exists (ingredients : string list)
-    : ingredient list Lwt.t
-  =
-  let open Lwt.Syntax in
-  match ingredients with
-  | ingredient_name :: ingredients ->
-    let* ingredient = find_ingredient ingredient_name in
-    (match ingredient with
-    | None ->
-      let* ingredient = create_ingredient ingredient_name in
-      let* ingredients = create_ingredients_if_not_exists ingredients in
-      Lwt.return @@ List.cons ingredient ingredients
-    | Some ingredient ->
-      let* ingredients = create_ingredients_if_not_exists ingredients in
-      Lwt.return @@ List.cons ingredient ingredients)
-  | [] -> Lwt.return []
-;;
 
 let add_ingredient_to_pizza (pizza : string) (ingredient : ingredient) =
   Repo.add_ingredient_to_pizza pizza ingredient.name
 ;;
 
-let rec add_ingredients_to_pizza (pizza : t) (ingredients : ingredient list) : unit Lwt.t =
+let create_pizza name (ingredients : string list) : t Lwt.t =
   let open Lwt.Syntax in
-  match ingredients with
-  | ingredient :: ingredients ->
-    let* () = add_ingredient_to_pizza pizza.name ingredient in
-    add_ingredients_to_pizza pizza ingredients
-  | [] -> Lwt.return ()
-;;
-
-let create name (ingredients : string list) : t Lwt.t =
-  let open Lwt.Syntax in
-  let* ingredients = create_ingredients_if_not_exists ingredients in
   let pizza = Model.create_pizza name ingredients in
-  let* () = Repo.insert_pizza pizza in
+  let* () = Repo.insert_pizza pizza ingredients in
   let* pizza = Repo.find_pizza name in
   match pizza with
-  | Some pizza ->
-    let* () = add_ingredients_to_pizza pizza ingredients in
-    Lwt.return pizza
+  | Some pizza -> Lwt.return pizza
   | None ->
     Logs.err (fun m -> m "Failed to create pizza '%s'" name);
     raise @@ Exception "Failed to create pizza"
 ;;
 
-let find name = Repo.find_pizza name
-let delete (pizza : t) : unit Lwt.t = Repo.delete_pizza pizza
+let find_pizza name = Repo.find_pizza name
+let find_pizzas = Repo.find_pizzas
+let delete_pizza (pizza : t) : unit Lwt.t = Repo.delete_pizza pizza

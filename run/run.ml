@@ -9,7 +9,8 @@ let services =
   ; Service.Migration.(register ~migrations:Database.Migration.all ())
   ; Sihl.Web.Http.register
       ~middlewares:Routes.Global.middlewares
-      ~routers:[ Routes.Api.router; Routes.Site.router ]
+      ~routers:
+        [ Routes.Api.router; Routes.Site.router_customer; Routes.Site.router_public ]
       ()
   ]
 ;;

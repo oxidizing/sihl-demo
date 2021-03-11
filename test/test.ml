@@ -26,11 +26,25 @@ let delete_ingredient _ () =
   Lwt.return ()
 ;;
 
+let find_ingredients _ () =
+  let* () = Sihl.Cleaner.clean_all () in
+  let* () = Pizza.clean () in
+  let* _ = Pizza.create_ingredient "ham" in
+  let* _ = Pizza.create_ingredient "tomato" in
+  let* (ingredients : string list) =
+    Pizza.find_ingredients ()
+    |> Lwt.map
+         (List.map ~f:(fun (ingredient : Pizza.ingredient) -> ingredient.Pizza.name))
+  in
+  Alcotest.(check (list string) "has pizza" [ "ham"; "tomato" ] ingredients);
+  Lwt.return ()
+;;
+
 let create_pizza_without_ingredients _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = Pizza.clean () in
-  let* _ = Pizza.create "boring" [] in
-  let* (pizza : Pizza.t) = Pizza.find "boring" |> Lwt.map Option.get in
+  let* _ = Pizza.create_pizza "boring" [] in
+  let* (pizza : Pizza.t) = Pizza.find_pizza "boring" |> Lwt.map Option.get in
   Alcotest.(check string "created boring pizza" "boring" pizza.Pizza.name);
   Lwt.return ()
 ;;
@@ -38,15 +52,11 @@ let create_pizza_without_ingredients _ () =
 let create_pizza_with_ingredients _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = Pizza.clean () in
-  let* _ = Pizza.create "prosciutto" [ "ham"; "tomato" ] in
-  let* (pizza : Pizza.t) = Pizza.find "prosciutto" |> Lwt.map Option.get in
+  let* _ = Pizza.create_pizza "prosciutto" [ "ham"; "tomato" ] in
+  let* (pizza : Pizza.t) = Pizza.find_pizza "prosciutto" |> Lwt.map Option.get in
   Alcotest.(check string "created prosciutto" "prosciutto" pizza.Pizza.name);
-  let ingredients =
-    List.map
-      ~f:(fun (ingredient : Pizza.ingredient) -> ingredient.Pizza.name)
-      pizza.Pizza.ingredients
-  in
-  Alcotest.(check (list string) "has ingredients" [ "ham"; "tomato" ] ingredients);
+  Alcotest.(
+    check (list string) "has ingredients" [ "ham"; "tomato" ] pizza.Pizza.ingredients);
   let* (ham : Pizza.ingredient) = Pizza.find_ingredient "ham" |> Lwt.map Option.get in
   Alcotest.(check string "has created ingredient" "ham" ham.Pizza.name);
   Lwt.return ()
@@ -55,11 +65,11 @@ let create_pizza_with_ingredients _ () =
 let delete_pizza_with_ingredients _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = Pizza.clean () in
-  let* _ = Pizza.create "prosciutto" [ "ham"; "tomato" ] in
-  let* (pizza : Pizza.t) = Pizza.find "prosciutto" |> Lwt.map Option.get in
+  let* _ = Pizza.create_pizza "prosciutto" [ "ham"; "tomato" ] in
+  let* (pizza : Pizza.t) = Pizza.find_pizza "prosciutto" |> Lwt.map Option.get in
   Alcotest.(check string "created prosciutto" "prosciutto" pizza.Pizza.name);
-  let* () = Pizza.delete pizza in
-  let* pizza = Pizza.find "prosciutto" in
+  let* () = Pizza.delete_pizza pizza in
+  let* pizza = Pizza.find_pizza "prosciutto" in
   Alcotest.(check bool "has deleted pizza" true (Option.is_none pizza));
   let* (ham : Pizza.ingredient) = Pizza.find_ingredient "ham" |> Lwt.map Option.get in
   Alcotest.(check string "has not deleted ingredient" "ham" ham.Pizza.name);
@@ -70,17 +80,33 @@ let delete_pizza_with_ingredients _ () =
   Lwt.return ()
 ;;
 
+let find_pizzas _ () =
+  let* () = Sihl.Cleaner.clean_all () in
+  let* () = Pizza.clean () in
+  let* _ = Pizza.create_pizza "boring" [] in
+  let* _ = Pizza.create_pizza "proscioutto" [ "ham"; "tomato" ] in
+  let* (ingredients : string list) =
+    Pizza.find_ingredients ()
+    |> Lwt.map
+         (List.map ~f:(fun (ingredient : Pizza.ingredient) -> ingredient.Pizza.name))
+  in
+  Alcotest.(check (list string) "has pizza" [ "ham"; "tomato" ] ingredients);
+  Lwt.return ()
+;;
+
 let suite =
   Alcotest_lwt.
     [ ( "delicious test suite"
       , [ test_case "create ingredient" `Quick create_ingredient
         ; test_case "delete ingredient" `Quick delete_ingredient
+        ; test_case "find ingredients" `Quick find_ingredients
         ; test_case
             "create pizza without ingredients"
             `Quick
             create_pizza_without_ingredients
         ; test_case "create pizza with ingredients" `Quick create_pizza_with_ingredients
         ; test_case "delete pizza with ingredients" `Quick delete_pizza_with_ingredients
+        ; test_case "find pizzas" `Quick find_pizzas
         ] )
     ]
 ;;

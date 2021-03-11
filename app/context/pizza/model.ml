@@ -18,7 +18,7 @@ let create_ingredient name =
 
 type t =
   { name : string
-  ; ingredients : ingredient list
+  ; ingredients : string list
   ; created_at : Ptime.t
   ; updated_at : Ptime.t
   }

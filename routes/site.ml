@@ -5,19 +5,19 @@
 
 (* Public section *)
 let welcome = Sihl.Web.Http.get "/" Handler.Welcome.index
-let ingredient_index = Sihl.Web.Http.get "/ingredients" Handler.Ingredient.index
-let ingredient_create = Sihl.Web.Http.put "/ingredients" Handler.Ingredient.create
-let ingredient_delete = Sihl.Web.Http.delete "/ingredients/:id" Handler.Ingredient.delete
-let pizza_index = Sihl.Web.Http.get "/pizzas" Handler.Pizza.index
-let pizza_create = Sihl.Web.Http.put "/pizzas" Handler.Pizza.index
-let pizza_delete = Sihl.Web.Http.delete "/pizzas/:id" Handler.Pizza.delete
+let ingredient_index = Sihl.Web.Http.get "/ingredients" Handler.Ingredients.index
+let ingredient_create = Sihl.Web.Http.put "/ingredients" Handler.Ingredients.create
+let ingredient_delete = Sihl.Web.Http.delete "/ingredients/:id" Handler.Ingredients.delete
+let pizza_index = Sihl.Web.Http.get "/pizzas" Handler.Pizzas.index
+let pizza_create = Sihl.Web.Http.put "/pizzas" Handler.Pizzas.index
+let pizza_delete = Sihl.Web.Http.delete "/pizzas/:id" Handler.Pizzas.delete
 
 (* Customer section *)
-let login = Sihl.Web.Http.get "/login" Handler.Customer.login
-let registration = Sihl.Web.Http.get "/login" Handler.Customer.registration
-let order_index = Sihl.Web.Http.get "/orders" Handler.Customer.Order.index
-let order_create = Sihl.Web.Http.put "/orders/:id" Handler.Customer.Order.create
-let order_delete = Sihl.Web.Http.delete "/orders/:id" Handler.Customer.Order.delete
+let login = Sihl.Web.Http.get "/login" Handler.Customers.login
+let registration = Sihl.Web.Http.get "/login" Handler.Customers.registration
+let order_index = Sihl.Web.Http.get "/orders" Handler.Customers.Order.index
+let order_create = Sihl.Web.Http.put "/orders/:id" Handler.Customers.Order.create
+let order_delete = Sihl.Web.Http.delete "/orders/:id" Handler.Customers.Order.delete
 
 let middlewares =
   [ Opium.Middleware.content_length
@@ -29,7 +29,7 @@ let middlewares =
   ]
 ;;
 
-(* TODO [jerben] add authentiation and authorization middlewares *)
+(* TODO [jerben] add authentication middleware *)
 let router_customer =
   Sihl.Web.Http.router
     ~middlewares
