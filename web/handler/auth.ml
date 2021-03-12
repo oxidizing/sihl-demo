@@ -28,6 +28,12 @@ let login_create req =
     |> Lwt.return
 ;;
 
+let login_delete _ =
+  Sihl.Web.Response.redirect_to "/"
+  |> Sihl.Web.Session.set ("user_id", None)
+  |> Lwt.return
+;;
+
 let registration_index req =
   match Sihl.Web.User.find_opt req with
   | Some _ -> Sihl.Web.Response.redirect_to "/ingredients" |> Lwt.return

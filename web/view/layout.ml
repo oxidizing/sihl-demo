@@ -14,11 +14,12 @@ let navigation user =
     [%html
       {|
 <ul>
-  <li><a href="/">|}
+  <li>|}
         [ Html.txt (Format.sprintf "Welcome %s!" user.Sihl.Contract.User.email) ]
-        {|</a></li>
+        {|</li>
   <li><a href="/ingredients">Ingredients</a></li>
-  <li><a href="/pizzas">pizzas</a></li>
+  <li><a href="/pizzas">Pizzas</a></li>
+  <li><a href="/logout">Logout</a></li>
 </ul>|}]
 ;;
 

@@ -37,6 +37,7 @@ let router_public =
     [ get "/" Handler.Welcome.index
     ; get "/login" Handler.Auth.login_index
     ; post "/login" Handler.Auth.login_create
+    ; get "/logout" Handler.Auth.login_delete
     ; get "/registration" Handler.Auth.registration_index
     ; post "/registration" Handler.Auth.registration_create
     ]
