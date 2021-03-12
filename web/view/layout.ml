@@ -15,7 +15,8 @@ let navigation user =
       {|
 <ul>
   <li>|}
-        [ Html.txt (Format.sprintf "Welcome %s!" user.Sihl.Contract.User.email) ]
+        [ Html.txt (Format.sprintf "Welcome %s!" user.Sihl.Contract.User.email)
+        ]
         {|</li>
   <li><a href="/ingredients">Ingredients</a></li>
   <li><a href="/pizzas">Pizzas</a></li>

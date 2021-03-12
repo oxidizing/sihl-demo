@@ -7,7 +7,8 @@ let clean =
   then
     raise
     @@ Exception
-         "Can not clean repository in production, this is most likely not what you want"
+         "Can not clean repository in production, this is most likely not what \
+          you want"
   else Repo.clean
 ;;
 
@@ -28,10 +29,13 @@ let create_ingredient name : (ingredient, string) Result.t Lwt.t =
       Logs.err (fun m -> m "Failed to create ingredient '%s'" name);
       raise @@ Exception "Failed to create ingredient")
   | Some ingredient ->
-    Lwt.return (Error (Format.sprintf "Ingredient '%s' already exists" ingredient.name))
+    Lwt.return
+      (Error (Format.sprintf "Ingredient '%s' already exists" ingredient.name))
 ;;
 
-let delete_ingredient (ingredient : ingredient) = Repo.delete_ingredient ingredient
+let delete_ingredient (ingredient : ingredient) =
+  Repo.delete_ingredient ingredient
+;;
 
 let add_ingredient_to_pizza (pizza : string) (ingredient : ingredient) =
   Repo.add_ingredient_to_pizza pizza ingredient.name

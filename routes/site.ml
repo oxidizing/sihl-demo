@@ -1,9 +1,9 @@
 open Sihl.Web.Http
 
-(* All the HTML HTTP entry points are listed here.
+(* All the HTML HTTP entry points are listed in this file.
 
-   Don't put actual logic here to keep it declarative and easy to read. The
-   overall scope of the web app should be clear after scanning the routes. *)
+   Don't put actual logic here and keep the routes declarative and easy to read.
+   The overall scope of the web app should be clear after scanning the routes. *)
 
 let middlewares =
   [ Opium.Middleware.content_length
@@ -16,10 +16,10 @@ let middlewares =
   ]
 ;;
 
-(* TODO [jerben] add authentication middleware *)
 let router_private =
   Sihl.Web.Http.router
-    ~middlewares
+    ~middlewares:
+      (List.concat [ middlewares; [ Middleware.Authn.middleware "/login" ] ])
     ~scope:"/"
     [ get "/ingredients" Handler.Ingredients.index
     ; post "/ingredients" Handler.Ingredients.create

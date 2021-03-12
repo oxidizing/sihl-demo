@@ -45,11 +45,15 @@ let index user ~alert ~notice csrf (ingredients : Pizza.ingredient list) =
     [%html {|<span>|} [ Html.txt (Option.value alert ~default:"") ] {|</span>|}]
   in
   let notice_message =
-    [%html {|<span>|} [ Html.txt (Option.value notice ~default:"") ] {|</span>|}]
+    [%html
+      {|<span>|} [ Html.txt (Option.value notice ~default:"") ] {|</span>|}]
   in
   let list_header = [%html {|<tr></tr>|}] in
   let ingredients =
-    [%html {|<table><tbody>|} (List.cons list_header list_items) {|</tbody></table>|}]
+    [%html
+      {|<table><tbody>|} (List.cons list_header list_items) {|</tbody></table>|}]
   in
-  Layout.page (Some user) [ alert_message; notice_message; create_form csrf; ingredients ]
+  Layout.page
+    (Some user)
+    [ alert_message; notice_message; create_form csrf; ingredients ]
 ;;

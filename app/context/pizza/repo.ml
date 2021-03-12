@@ -7,7 +7,9 @@ let clean_ingredients_request =
 ;;
 
 let clean_pizzas_ingredients_request =
-  Caqti_request.exec Caqti_type.unit "TRUNCATE TABLE pizzas_ingredients CASCADE;"
+  Caqti_request.exec
+    Caqti_type.unit
+    "TRUNCATE TABLE pizzas_ingredients CASCADE;"
 ;;
 
 let clean () =
@@ -39,7 +41,9 @@ let insert_ingredient (ingredient : Model.ingredient) =
       let module Connection = (val connection : Caqti_lwt.CONNECTION) in
       Connection.exec
         insert_ingredient_request
-        (ingredient.Model.name, ingredient.Model.created_at, ingredient.Model.updated_at))
+        ( ingredient.Model.name
+        , ingredient.Model.created_at
+        , ingredient.Model.updated_at ))
 ;;
 
 let find_ingredient_request =
@@ -65,7 +69,8 @@ let find_ingredient (name : string) : Model.ingredient option Lwt.t =
   in
   Lwt.return
   @@ Option.map
-       (fun (name, created_at, updated_at) -> Model.{ name; created_at; updated_at })
+       (fun (name, created_at, updated_at) ->
+         Model.{ name; created_at; updated_at })
        ingredient
 ;;
 
@@ -91,7 +96,8 @@ let find_ingredients () : Model.ingredient list Lwt.t =
   in
   Lwt.return
   @@ List.map
-       ~f:(fun (name, created_at, updated_at) -> Model.{ name; created_at; updated_at })
+       ~f:(fun (name, created_at, updated_at) ->
+         Model.{ name; created_at; updated_at })
        ingredients
 ;;
 
@@ -122,7 +128,8 @@ let find_ingredients_of_pizza (name : string) : Model.ingredient list Lwt.t =
   in
   Lwt.return
   @@ List.map
-       ~f:(fun (name, created_at, updated_at) -> Model.{ name; created_at; updated_at })
+       ~f:(fun (name, created_at, updated_at) ->
+         Model.{ name; created_at; updated_at })
        ingredients
 ;;
 
@@ -164,7 +171,9 @@ let find_pizza name =
   in
   let* ingredients = find_ingredients_of_pizza name in
   let ingredients =
-    List.map ~f:(fun (ingredient : Model.ingredient) -> ingredient.Model.name) ingredients
+    List.map
+      ~f:(fun (ingredient : Model.ingredient) -> ingredient.Model.name)
+      ingredients
   in
   Lwt.return
   @@ Option.map
@@ -256,7 +265,9 @@ let insert_pizza (pizza : Model.t) (ingredients : string list) =
       List.fold_left
         ~f:(fun result ingredient ->
           let* () = result in
-          Connection.exec insert_pizza_ingredient_request (pizza.Model.name, ingredient))
+          Connection.exec
+            insert_pizza_ingredient_request
+            (pizza.Model.name, ingredient))
         ~init:(Lwt_result.return ())
         ingredients)
 ;;

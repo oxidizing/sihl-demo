@@ -50,7 +50,9 @@ let registration_create req =
     ; ("password", [ password ])
     ; ("password_confirmation", [ password_confirmation ])
     ] ->
-    let* user = Service.User.register_user ~email ~password ~password_confirmation () in
+    let* user =
+      Service.User.register_user ~email ~password ~password_confirmation ()
+    in
     (match user with
     | Ok user ->
       Sihl.Web.Response.redirect_to "/ingredients"

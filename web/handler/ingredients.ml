@@ -38,7 +38,8 @@ let delete req =
   match ingredient with
   | None ->
     Sihl.Web.Response.redirect_to "/ingredients"
-    |> Sihl.Web.Flash.set_notice (Some (Format.sprintf "Ingredient '%s' not found" name))
+    |> Sihl.Web.Flash.set_notice
+         (Some (Format.sprintf "Ingredient '%s' not found" name))
     |> Lwt.return
   | Some ingredient ->
     let* () = Pizza.delete_ingredient ingredient in
