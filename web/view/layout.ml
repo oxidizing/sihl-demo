@@ -1,18 +1,28 @@
 open Tyxml
 
-let%html navigation =
-  {|
+let navigation user =
+  match user with
+  | None ->
+    [%html
+      {|
 <ul>
-  <li><a href="/">Welcome</a></li>
+  <li><a href="/login">Login</a></li>
+  <li><a href="/registration">Registration</a></li>
+</ul>
+|}]
+  | Some user ->
+    [%html
+      {|
+<ul>
+  <li><a href="/">|}
+        [ Html.txt (Format.sprintf "Welcome %s!" user.Sihl.Contract.User.email) ]
+        {|</a></li>
   <li><a href="/ingredients">Ingredients</a></li>
   <li><a href="/pizzas">pizzas</a></li>
-  <li><a href="/customer/login">Login</a></li>
-  <li><a href="/customer/registration">Registration</a></li>
-</ul>
-|}
+</ul>|}]
 ;;
 
-let%html page body =
+let%html page user body =
   {|
 <!doctype html>
 <html lang="en">
@@ -24,7 +34,7 @@ let%html page body =
       <title>Hello world!</title>
   </head>
     <body>|}
-    [ navigation ]
+    [ navigation user ]
     body
     {|
      </body>

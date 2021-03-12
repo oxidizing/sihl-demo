@@ -1,6 +1,6 @@
 open Tyxml
 
-let index =
+let index user =
   let ingredients = [%html {|<span>List of pizzas.</span>|}] in
-  Layout.page [ ingredients ]
+  Layout.page (Some user) [ ingredients ]
 ;;

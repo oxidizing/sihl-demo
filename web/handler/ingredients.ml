@@ -3,9 +3,11 @@ let index req =
   let csrf = Sihl.Web.Csrf.find req in
   let alert = Sihl.Web.Flash.find_alert req in
   let notice = Sihl.Web.Flash.find_notice req in
+  let user = Sihl.Web.User.find req in
   let* ingredients = Pizza.find_ingredients () in
   Lwt.return
-  @@ Sihl.Web.Response.of_html (View.Ingredients.index ~alert ~notice csrf ingredients)
+  @@ Sihl.Web.Response.of_html
+       (View.Ingredients.index user ~alert ~notice csrf ingredients)
 ;;
 
 let create req =

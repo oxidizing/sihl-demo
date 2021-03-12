@@ -1,6 +1,6 @@
 open Tyxml
 
-let page =
+let page user =
   let welcome = [%html {|<span>Welcome to Vinnie's Pizza Place.</span>|}] in
-  Layout.page [ welcome ]
+  Layout.page user [ welcome ]
 ;;

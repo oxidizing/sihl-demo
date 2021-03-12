@@ -25,7 +25,7 @@ let%html delete_button (ingredient : Pizza.ingredient) csrf =
 |}
 ;;
 
-let index ~alert ~notice csrf (ingredients : Pizza.ingredient list) =
+let index user ~alert ~notice csrf (ingredients : Pizza.ingredient list) =
   let list_items =
     List.map
       ~f:(fun (ingredient : Pizza.ingredient) ->
@@ -51,5 +51,5 @@ let index ~alert ~notice csrf (ingredients : Pizza.ingredient list) =
   let ingredients =
     [%html {|<table><tbody>|} (List.cons list_header list_items) {|</tbody></table>|}]
   in
-  Layout.page [ alert_message; notice_message; create_form csrf; ingredients ]
+  Layout.page (Some user) [ alert_message; notice_message; create_form csrf; ingredients ]
 ;;

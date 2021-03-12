@@ -10,8 +10,9 @@ let services =
   ; Sihl.Web.Http.register
       ~middlewares:Routes.Global.middlewares
       ~routers:
-        [ Routes.Api.router; Routes.Site.router_customer; Routes.Site.router_public ]
+        [ Routes.Api.router; Routes.Site.router_public; Routes.Site.router_private ]
       ()
+  ; Service.User.register ()
   ]
 ;;
 
