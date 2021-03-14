@@ -6,11 +6,11 @@ A restaurant serving Pizza and sometimes Lasagna
 maintainer: ["Josef Erben"]
 authors: ["Josef Erben"]
 license: "MIT"
-homepage: "https://github.com/jerben/pizza"
-doc: "https://jerben.github.io/pizza/"
-bug-reports: "https://github.com/jerben/pizza/issues"
+homepage: "https://github.com/oxidizing/pizza"
+doc: "https://oxidizing.github.io/pizza/"
+bug-reports: "https://github.com/oxidizing/pizza/issues"
 depends: [
-  "angstrom" {= "0.15.0"}
+  "aangstrom" {= "0.15.0"}
   "asn1-combinators" {= "0.2.5"}
   "astring" {= "0.8.5"}
   "base" {= "v0.14.1"}
@@ -103,7 +103,8 @@ depends: [
   "seq" {= "base"}
   "sexplib" {= "v0.14.0"}
   "sexplib0" {= "v0.14.0"}
-  "sihl" {= "0.3.0~rc2"}
+  "sihl" {= "0.3.0"}
+  "sihl-user" {= "0.3.0"}
   "ssl" {= "0.5.10"}
   "stdlib-shims" {= "0.3.0"}
   "stringext" {= "1.6.0"}
@@ -135,6 +136,6 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/jerben/pizza.git"
+dev-repo: "git+https://github.com/oxidizing/pizza.git"
 name: "pizza"
 version: "dev"
