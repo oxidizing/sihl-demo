@@ -28,6 +28,7 @@ A restaurant serving Pizza and sometimes Lasagna
   dune
   (sihl (>= 0.3.0))
   (sihl-user (>= 0.3.0))
+  (sihl-queue (>= 0.3.0))
   (tyxml-ppx (>= 4.4.0))
   (caqti-driver-postgresql (>= 1.2.1))
   (alcotest-lwt :with-test)

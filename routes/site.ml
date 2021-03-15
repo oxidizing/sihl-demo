@@ -42,3 +42,13 @@ let router_public =
     ; post "/registration" Handler.Auth.registration_create
     ]
 ;;
+
+let router_admin_queue =
+  Service.Queue.router
+    ~back:"/"
+    ~middlewares:
+      [ Sihl.Web.Middleware.user (fun user_id -> Service.User.find_opt ~user_id)
+      ; Middleware.Authn.middleware "/login"
+      ]
+    "/admin/queue"
+;;

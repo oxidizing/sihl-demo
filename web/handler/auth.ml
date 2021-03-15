@@ -9,7 +9,6 @@ let login_index req =
 
 let login_create req =
   let open Lwt.Syntax in
-  Logs.err (fun m -> m "%a" Sihl.Web.Form.pp (Sihl.Web.Form.find_all req));
   match Sihl.Web.Form.find_all req with
   | [ ("email", [ email ]); ("password", [ password ]) ] ->
     let* user = Service.User.login ~email ~password in

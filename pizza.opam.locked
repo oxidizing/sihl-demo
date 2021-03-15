@@ -10,7 +10,7 @@ homepage: "https://github.com/oxidizing/pizza"
 doc: "https://oxidizing.github.io/pizza/"
 bug-reports: "https://github.com/oxidizing/pizza/issues"
 depends: [
-  "aangstrom" {= "0.15.0"}
+  "angstrom" {= "0.15.0"}
   "asn1-combinators" {= "0.2.5"}
   "astring" {= "0.8.5"}
   "base" {= "v0.14.1"}
@@ -104,6 +104,7 @@ depends: [
   "sexplib" {= "v0.14.0"}
   "sexplib0" {= "v0.14.0"}
   "sihl" {= "0.3.0"}
+  "sihl-queue" {= "0.3.0"}
   "sihl-user" {= "0.3.0"}
   "ssl" {= "0.5.10"}
   "stdlib-shims" {= "0.3.0"}
@@ -139,3 +140,17 @@ build: [
 dev-repo: "git+https://github.com/oxidizing/pizza.git"
 name: "pizza"
 version: "dev"
+pin-depends: [
+  [
+    "sihl-user.0.3.0"
+    "git+ssh://git@github.com/oxidizing/sihl.git#bugfix/improve-sihl-queue"
+  ]
+  [
+    "sihl-queue.0.3.0"
+    "git+ssh://git@github.com/oxidizing/sihl.git#bugfix/improve-sihl-queue"
+  ]
+  [
+    "sihl.0.3.0"
+    "git+ssh://git@github.com/oxidizing/sihl.git#bugfix/improve-sihl-queue"
+  ]
+]
