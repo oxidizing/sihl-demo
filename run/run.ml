@@ -1,22 +1,26 @@
-let cleaners = [ Pizza.cleaner ]
-let routers = Http.Route.all
-let migrations = Database.Migration.all
+(* This is the entry point to the Sihl app.
+
+   The parts of your app come together here and are wired to the services. This
+   is also the central registry for infrastructure services. *)
 
 let services =
-  [ Service.Repository.register ~cleaners ()
-  ; Service.Migration.register ~migrations ()
-  ; Service.Http.register ~routers ()
+  [ Sihl.Database.register ()
+  ; Service.Migration.(register ~migrations:Database.Migration.all ())
+  ; Sihl.Web.Http.register
+      ~middlewares:Routes.Global.middlewares
+      ~routers:
+        [ Routes.Api.router
+        ; Routes.Site.router_public
+        ; Routes.Site.router_private
+        ]
+      ()
+  ; Service.User.register ()
   ]
 ;;
-
-let commands = [ Command.Create_pizza.run ]
 
 let () =
   Sihl.App.(
     empty
     |> with_services services
-    |> before_start (fun () ->
-           Printexc.record_backtrace true;
-           Lwt.return ())
-    |> run ~commands)
+    |> run ~commands:[ Command.Create_pizza.run ])
 ;;

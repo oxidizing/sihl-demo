@@ -1,20 +1,31 @@
 (* This defines our pizza model *)
-(* These models are pure and are used by other parts of the application, like the services *)
+(* These models are pure and are used by other parts of the application, like
+   the services *)
+
+(* We use some ppx for convenience *)
+(* make is used to construct a pizza model from data fetched from the database *)
+
+(* This creates a pizza model with a randomized id *)
+
+type ingredient =
+  { name : string
+  ; created_at : Ptime.t
+  ; updated_at : Ptime.t
+  }
+
+let create_ingredient name =
+  { name; created_at = Ptime_clock.now (); updated_at = Ptime_clock.now () }
+;;
+
 type t =
-  { id : string
-  ; name : string
+  { name : string
   ; ingredients : string list
   ; created_at : Ptime.t
   ; updated_at : Ptime.t
   }
-(* We use some ppx for convenience *)
-(* make is used to construct a pizza model from data fetched from the database *)
-[@@deriving fields, show, eq, make]
 
-(* This creates a pizza model with a randomized id *)
-let create name ingredients =
-  { id = Sihl.Database.Id.random () |> Sihl.Database.Id.to_string
-  ; name
+let create_pizza name ingredients =
+  { name
   ; ingredients
   ; created_at = Ptime_clock.now ()
   ; updated_at = Ptime_clock.now ()

@@ -1,9 +1,8 @@
-# Sihl Demo Application
+# Sihl demo app
 
-This is a simple demo application showcasing the web framework [Sihl](https://github.com/oxidizing/sihl). This project is meant to be clicked through to give a general sense of the folder and file structure of a typical Sihl project. This project aims to cover all aspects of Sihl comprehensively. It can also be used as a starter to kindle your own Sihl project!
+A restaurant serving pizza and sometimes lasagna, delicious lasagna.
 
-## Installation
-If you want to run this demo application locally, you will need `dune` and `opam`.
+This is an app that demonstrates the usage of the web framework [Sihl](https://github.com/oxidizing/sihl/). The goal is to showcase every feature of Sihl.
 
 1. Clone the repository and run
    ```
@@ -14,9 +13,41 @@ If you want to run this demo application locally, you will need `dune` and `opam
    opam install -y . --deps-only --with-doc --with-test --locked --unlock-base
    ```
 
-### VSCode setup
+## TODO
+- Makefile commands
+- Docker commands
+- Postgres dependencies
+## Quickstart
 
-#### Requirements
+1. After cloning the repository, create an opam switch:
+
+```
+make switch
+```
+
+2. Start the database using docker:
+
+```
+make db
+```
+
+3. Run migrations:
+
+```
+make sihl migrate
+```
+
+4. Run the development server:
+
+```
+make dev
+```
+
+5. Go to localhost:3000
+
+## VSCode setup
+
+### Requirements
 
 This project is setup to run in a DevContainer. Ensure requirements to run in a DevContainer:
 
@@ -24,16 +55,11 @@ This project is setup to run in a DevContainer. Ensure requirements to run in a 
 1. [Visual Studio Code](https://code.visualstudio.com/) (VS Code) installed
 1. VS Code Extension [Remote Container](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed
 
-#### Start DevContainer
+### Start DevContainer
 
 Click on the icon similar to "><" in the bottom left corner and select `Remote-Containers: Reopen in Container`.
 If any changes were made to files in `.devcontainer` folder the Container should be rebuilt (`Remote-Containers: Rebuild Container`)
 
-## TODO
-- Makefile commands
-- Docker commands
-- Postgres dependencies
+## Contributing
 
-## Why pizza?
-Why not? :)
-
+Take a look at our [Contributing Guide](CONTRIBUTING.md).

@@ -5,8 +5,10 @@ let run =
     ~description:"Create a pizza"
     (fun args ->
       match args with
-      | name :: ingredients -> Pizza.create name ingredients |> Lwt.map ignore
+      | name :: ingredients ->
+        Pizza.create_pizza name ingredients |> Lwt.map ignore
       | _ ->
         raise
-          (Sihl.Command.Exception "Usage: <pizza name> <ingredient1> <ingredient2> ..."))
+          (Sihl.Command.Exception
+             "Usage: <pizza name> <ingredient1> <ingredient2> ..."))
 ;;
