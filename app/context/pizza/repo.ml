@@ -228,7 +228,7 @@ let insert_pizza_request =
           $2,
           $3
         )
-        |sql}
+    |sql}
 ;;
 
 let insert_pizza_ingredient_request =
@@ -242,7 +242,7 @@ let insert_pizza_ingredient_request =
           (SELECT id FROM pizzas WHERE pizzas.name = $1),
           (SELECT id FROM ingredients WHERE ingredients.name = $2)
         )
-        |sql}
+    |sql}
 ;;
 
 let insert_pizza (pizza : Model.t) (ingredients : string list) =

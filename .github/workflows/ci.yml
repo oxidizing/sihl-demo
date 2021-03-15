@@ -51,7 +51,7 @@ jobs:
         run: opam pin add pizza.dev . --no-action
 
       - name: Query and install external dependencies
-        run: opam depext pizza --yes --with-doc 
+        run: opam depext pizza --yes --with-doc
 
       - name: Install dependencies
         if: steps.cache-opam.outputs.cache-hit != 'true'

@@ -14,5 +14,8 @@ _build/
 # Local OPAM switch
 _opam/
 
+# vscode devcontainer data
+.devcontainer/data/
+
 # Logs
 logs/*
