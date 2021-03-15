@@ -57,6 +57,8 @@ This project is setup to run in a DevContainer. Ensure requirements to run in a 
 
 ### Start DevContainer
 
+- Before starting the devcontainer make sure `DATABASE_URL` is deleted, commented or the host is set to `database` (instead of localhost) in `.env` file.
+
 Click on the icon similar to "><" in the bottom left corner and select `Remote-Containers: Reopen in Container`.
 If any changes were made to files in `.devcontainer` folder the Container should be rebuilt (`Remote-Containers: Rebuild Container`)
 

@@ -15,7 +15,7 @@ _build/
 _opam/
 
 # vscode devcontainer data
-.devcontainer/database/
+.devcontainer/data/
 
 # Logs
 logs/*

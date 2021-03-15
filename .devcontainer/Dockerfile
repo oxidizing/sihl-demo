@@ -14,6 +14,7 @@ RUN sudo apt-get update -q && sudo apt-get install -yqq \
   libpq-dev \
   libqt5gui5 \
   libssl-dev \
+  lsof \
   m4 \
   pdftk-java \
   perl \
@@ -35,5 +36,3 @@ RUN sudo apt-get update -q && sudo apt-get install -yqq \
 # WTF: https://github.com/mirage/ocaml-cohttp/issues/675
 RUN sudo bash -c 'echo "http		80/tcp	www		# WorldWideWeb HTTP" >> /etc/services' \
   sudo bash -c 'echo "https		443/tcp	www		# WorldWideWeb HTTPS" >> /etc/services'
-
-COPY postCreate.sh /home/postCreate.sh
