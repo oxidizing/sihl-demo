@@ -4,19 +4,6 @@ A restaurant serving pizza and sometimes lasagna, delicious lasagna.
 
 This is an app that demonstrates the usage of the web framework [Sihl](https://github.com/oxidizing/sihl/). The goal is to showcase every feature of Sihl.
 
-1. Clone the repository and run
-   ```
-   dune build
-   ```
-2. Install all dependencies as proposed by `dune`. If you want to install all dependencies manually, run
-   ```
-   opam install -y . --deps-only --with-doc --with-test --locked --unlock-base
-   ```
-
-## TODO
-- Makefile commands
-- Docker commands
-- Postgres dependencies
 ## Quickstart
 
 1. After cloning the repository, create an opam switch:
