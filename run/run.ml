@@ -7,7 +7,7 @@ let services =
   [ Sihl.Database.register ()
   ; Service.Migration.(register ~migrations:Database.Migration.all ())
   ; Sihl.Web.Http.register
-      ~middlewares:Routes.Global.middlewares
+      ~middlewares:Routes.global_middlewares
       (Sihl.Web.choose
          [ Routes.Api.router
          ; Routes.Site.router_public
