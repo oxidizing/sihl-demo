@@ -2,7 +2,7 @@ let create_pizza =
   Sihl.Command.make
     ~name:"pizza.create"
     ~help:"<pizza name> <ingredient1> <ingredient2> ..."
-    ~description:"Create a pizza"
+    ~description:"Creates a pizza immediately."
     (fun args ->
       match args with
       | name :: ingredients ->
@@ -10,7 +10,7 @@ let create_pizza =
       | _ ->
         raise
           (Sihl.Command.Exception
-             "Usage: <pizza name> <ingredient1> <ingredient2> ..."))
+             "Usage: <pizza name> <ingredient1> <ingredient2>"))
 ;;
 
 let cook_pizza =
@@ -40,5 +40,7 @@ let order_ingredient =
           ~delay:(Sihl.Time.Span.minutes 2)
           name
           Job.order_ingredient
-      | _ -> raise (Sihl.Command.Exception "Usage: <ingredient name>"))
+      | _ -> raise (Sihl.Command.Exception "Usage: <ingredients name>"))
 ;;
+
+let all = [ create_pizza; cook_pizza; order_ingredient ]

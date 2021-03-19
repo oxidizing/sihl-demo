@@ -1,3 +1,5 @@
 (library
  (name handler)
- (libraries service sihl pizza view))
+ (libraries service sihl pizza view)
+ (preprocess
+  (pps tyxml-ppx)))

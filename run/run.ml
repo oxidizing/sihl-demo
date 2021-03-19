@@ -7,13 +7,8 @@ let services =
   [ Sihl.Database.register ()
   ; Service.Migration.(register ~migrations:Database.Migration.all ())
   ; Sihl.Web.Http.register
-      ~middlewares:Routes.Global.middlewares
-      (Sihl.Web.choose
-         [ Routes.Api.router
-         ; Routes.Site.router_public
-         ; Routes.Site.router_private
-         ; Routes.Site.router_admin_queue
-         ])
+      ~middlewares:Routes.global_middlewares
+      (Sihl.Web.choose [ Routes.site_public; Routes.site_private_; Routes.api ])
   ; Service.User.register ()
   ; Service.Queue.register
       ~jobs:
@@ -22,14 +17,4 @@ let services =
   ]
 ;;
 
-let () =
-  Sihl.App.(
-    empty
-    |> with_services services
-    |> run
-         ~commands:
-           [ Command.create_pizza
-           ; Command.cook_pizza
-           ; Command.order_ingredient
-           ])
-;;
+let () = Sihl.App.(empty |> with_services services |> run ~commands:Command.all)

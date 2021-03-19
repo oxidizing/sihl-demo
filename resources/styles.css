@@ -8,3 +8,11 @@
     font-weight: 600;
     text-align: center;
 }
+
+.alert {
+    color: red;
+}
+
+.notice {
+    color: green;
+}

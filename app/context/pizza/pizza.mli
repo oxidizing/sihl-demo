@@ -1,8 +1,13 @@
 type ingredient =
   { name : string
+  ; is_vegan : bool
+  ; price : int
   ; created_at : Ptime.t
   ; updated_at : Ptime.t
   }
+
+val ingredient_schema
+  : (unit, string -> bool -> int -> ingredient, ingredient) Conformist.t
 
 type t =
   { name : string
@@ -17,10 +22,16 @@ val clean : unit -> unit Lwt.t
 
 (** Ingredients *)
 
-val find_ingredient : string -> ingredient option Lwt.t
-val find_ingredients : unit -> ingredient list Lwt.t
-val create_ingredient : string -> (ingredient, string) result Lwt.t
-val delete_ingredient : ingredient -> unit Lwt.t
+module Ingredient : sig
+  type t = ingredient
+
+  val find : string -> t option Lwt.t
+  val query : unit -> t list Lwt.t
+  val create : string -> bool -> int -> (t, string) result Lwt.t
+  val insert : t -> (t, string) result Lwt.t
+  val update : string -> t -> (t, string) result Lwt.t
+  val delete : t -> (unit, string) result Lwt.t
+end
 
 (** Pizzas *)
 

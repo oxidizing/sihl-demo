@@ -3,13 +3,13 @@ open Lwt.Syntax
 let create_ingredient _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = Pizza.clean () in
-  let* _ = Pizza.create_ingredient "ham" in
-  let* _ = Pizza.create_ingredient "tomato" in
+  let* _ = Pizza.Ingredient.create "ham" true 10 in
+  let* _ = Pizza.Ingredient.create "tomato" true 2 in
   let* (ham : Pizza.ingredient) =
-    Pizza.find_ingredient "ham" |> Lwt.map Option.get
+    Pizza.Ingredient.find "ham" |> Lwt.map Option.get
   in
   let* (tomato : Pizza.ingredient) =
-    Pizza.find_ingredient "tomato" |> Lwt.map Option.get
+    Pizza.Ingredient.find "tomato" |> Lwt.map Option.get
   in
   Alcotest.(check string "has ham" "ham" ham.Pizza.name);
   Alcotest.(check string "has tomato" "tomato" tomato.Pizza.name);
@@ -19,13 +19,13 @@ let create_ingredient _ () =
 let delete_ingredient _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = Pizza.clean () in
-  let* _ = Pizza.create_ingredient "ham" in
+  let* _ = Pizza.Ingredient.create "ham" true 10 in
   let* (ham : Pizza.ingredient) =
-    Pizza.find_ingredient "ham" |> Lwt.map Option.get
+    Pizza.Ingredient.find "ham" |> Lwt.map Option.get
   in
   Alcotest.(check string "has ham" "ham" ham.Pizza.name);
-  let* _ = Pizza.delete_ingredient ham in
-  let* ham = Pizza.find_ingredient "ham" in
+  let* _ = Pizza.Ingredient.delete ham in
+  let* ham = Pizza.Ingredient.find "ham" in
   Alcotest.(check bool "has deleted ham" true (Option.is_none ham));
   Lwt.return ()
 ;;
@@ -33,15 +33,15 @@ let delete_ingredient _ () =
 let find_ingredients _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = Pizza.clean () in
-  let* _ = Pizza.create_ingredient "ham" in
-  let* _ = Pizza.create_ingredient "tomato" in
+  let* _ = Pizza.Ingredient.create "ham" true 4 in
+  let* _ = Pizza.Ingredient.create "tomato" true 2 in
   let* (ingredients : string list) =
-    Pizza.find_ingredients ()
+    Pizza.Ingredient.query ()
     |> Lwt.map
          (List.map ~f:(fun (ingredient : Pizza.ingredient) ->
               ingredient.Pizza.name))
   in
-  Alcotest.(check (list string) "has pizza" [ "ham"; "tomato" ] ingredients);
+  Alcotest.(check (list string) "has pizza" [ "tomato"; "ham" ] ingredients);
   Lwt.return ()
 ;;
 
@@ -69,7 +69,7 @@ let create_pizza_with_ingredients _ () =
       [ "ham"; "tomato" ]
       pizza.Pizza.ingredients);
   let* (ham : Pizza.ingredient) =
-    Pizza.find_ingredient "ham" |> Lwt.map Option.get
+    Pizza.Ingredient.find "ham" |> Lwt.map Option.get
   in
   Alcotest.(check string "has created ingredient" "ham" ham.Pizza.name);
   Lwt.return ()
@@ -87,11 +87,11 @@ let delete_pizza_with_ingredients _ () =
   let* pizza = Pizza.find_pizza "prosciutto" in
   Alcotest.(check bool "has deleted pizza" true (Option.is_none pizza));
   let* (ham : Pizza.ingredient) =
-    Pizza.find_ingredient "ham" |> Lwt.map Option.get
+    Pizza.Ingredient.find "ham" |> Lwt.map Option.get
   in
   Alcotest.(check string "has not deleted ingredient" "ham" ham.Pizza.name);
   let* (tomato : Pizza.ingredient) =
-    Pizza.find_ingredient "tomato" |> Lwt.map Option.get
+    Pizza.Ingredient.find "tomato" |> Lwt.map Option.get
   in
   Alcotest.(
     check string "has not deleted ingredient" "tomato" tomato.Pizza.name);
@@ -104,12 +104,12 @@ let find_pizzas _ () =
   let* _ = Pizza.create_pizza "boring" [] in
   let* _ = Pizza.create_pizza "proscioutto" [ "ham"; "tomato" ] in
   let* (ingredients : string list) =
-    Pizza.find_ingredients ()
+    Pizza.Ingredient.query ()
     |> Lwt.map
          (List.map ~f:(fun (ingredient : Pizza.ingredient) ->
               ingredient.Pizza.name))
   in
-  Alcotest.(check (list string) "has pizza" [ "ham"; "tomato" ] ingredients);
+  Alcotest.(check (list string) "has pizza" [ "tomato"; "ham" ] ingredients);
   Lwt.return ()
 ;;
 
