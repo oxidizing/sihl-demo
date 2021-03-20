@@ -3,8 +3,8 @@ open Lwt.Syntax
 let create_ingredient _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = Pizza.clean () in
-  let* _ = Pizza.create_ingredient "ham" in
-  let* _ = Pizza.create_ingredient "tomato" in
+  let* _ = Pizza.create_ingredient "ham" true 10 in
+  let* _ = Pizza.create_ingredient "tomato" true 2 in
   let* (ham : Pizza.ingredient) =
     Pizza.find_ingredient "ham" |> Lwt.map Option.get
   in
@@ -19,7 +19,7 @@ let create_ingredient _ () =
 let delete_ingredient _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = Pizza.clean () in
-  let* _ = Pizza.create_ingredient "ham" in
+  let* _ = Pizza.create_ingredient "ham" true 10 in
   let* (ham : Pizza.ingredient) =
     Pizza.find_ingredient "ham" |> Lwt.map Option.get
   in
@@ -33,8 +33,8 @@ let delete_ingredient _ () =
 let find_ingredients _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = Pizza.clean () in
-  let* _ = Pizza.create_ingredient "ham" in
-  let* _ = Pizza.create_ingredient "tomato" in
+  let* _ = Pizza.create_ingredient "ham" true 4 in
+  let* _ = Pizza.create_ingredient "tomato" true 2 in
   let* (ingredients : string list) =
     Pizza.find_ingredients ()
     |> Lwt.map

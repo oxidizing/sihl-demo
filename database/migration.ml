@@ -49,6 +49,16 @@ let create_pizzas_ingredients_table =
      |sql}
 ;;
 
+let add_vegan_flag_and_price =
+  Sihl.Database.Migration.create_step
+    ~label:"add vegan flag and price"
+    {sql|
+     ALTER TABLE ingredients
+       ADD COLUMN is_vegan BOOL NOT NULL DEFAULT false,
+       ADD COLUMN price INT NOT NULL DEFAULT 0;
+     |sql}
+;;
+
 let remove_timezone_pizzas_table =
   Sihl.Database.Migration.create_step
     ~label:"remove timezone information from pizzas"
@@ -85,6 +95,7 @@ let pizzas =
     |> add_step create_pizzas_table
     |> add_step create_ingredients_table
     |> add_step create_pizzas_ingredients_table
+    |> add_step add_vegan_flag_and_price
     |> add_step remove_timezone_pizzas_table
     |> add_step remove_timezone_ingredients_table
     |> add_step remove_timezone_pizzas_ingredients_table)

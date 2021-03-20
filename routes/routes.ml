@@ -13,6 +13,7 @@ let global_middlewares =
 let site_middlewares =
   [ Opium.Middleware.content_length
   ; Opium.Middleware.etag
+  ; Opium.Middleware.method_override
   ; Sihl.Web.Middleware.csrf ()
   ; Sihl.Web.Middleware.flash ()
   ]
@@ -42,10 +43,11 @@ let site_private_ =
     "/"
     Sihl.Web.
       [ get "/ingredients" Handler.Ingredients.index
+      ; get "/ingredients/new" Handler.Ingredients.new_
       ; post "/ingredients" Handler.Ingredients.create
-      ; post "/ingredients/:name/delete" Handler.Ingredients.delete
-      ; get "/pizzas" Handler.Pizzas.index
-      ; post "/pizzas" Handler.Pizzas.index
+      ; get "/ingredients/:name" Handler.Ingredients.show
+      ; get "/ingredients/:name/edit" Handler.Ingredients.edit
+      ; put "/ingredients/:name" Handler.Ingredients.update
       ; delete "/pizzas/:name" Handler.Pizzas.delete
       ]
 ;;

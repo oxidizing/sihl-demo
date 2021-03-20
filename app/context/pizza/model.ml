@@ -9,12 +9,19 @@
 
 type ingredient =
   { name : string
+  ; is_vegan : bool
+  ; price : int
   ; created_at : Ptime.t
   ; updated_at : Ptime.t
   }
 
-let create_ingredient name =
-  { name; created_at = Ptime_clock.now (); updated_at = Ptime_clock.now () }
+let create_ingredient name is_vegan price =
+  { name
+  ; is_vegan
+  ; price
+  ; created_at = Ptime_clock.now ()
+  ; updated_at = Ptime_clock.now ()
+  }
 ;;
 
 type t =

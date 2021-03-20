@@ -22,16 +22,20 @@ let clean () =
 
 let insert_ingredient_request =
   Caqti_request.exec
-    Caqti_type.(tup3 string ptime ptime)
+    Caqti_type.(tup2 string (tup2 bool (tup2 int (tup2 ptime ptime))))
     {sql|
         INSERT INTO ingredients (
           name,
+          is_vegan,
+          price,
           created_at,
           updated_at
         ) VALUES (
           $1,
-          $2 AT TIME ZONE 'UTC',
-          $3 AT TIME ZONE 'UTC'
+          $2,
+          $3,
+          $4 AT TIME ZONE 'UTC',
+          $5 AT TIME ZONE 'UTC'
         )
         |sql}
 ;;
@@ -42,17 +46,20 @@ let insert_ingredient (ingredient : Model.ingredient) =
       Connection.exec
         insert_ingredient_request
         ( ingredient.Model.name
-        , ingredient.Model.created_at
-        , ingredient.Model.updated_at ))
+        , ( ingredient.Model.is_vegan
+          , ( ingredient.Model.price
+            , (ingredient.Model.created_at, ingredient.Model.updated_at) ) ) ))
 ;;
 
 let find_ingredient_request =
   Caqti_request.find_opt
     Caqti_type.string
-    Caqti_type.(tup3 string ptime ptime)
+    Caqti_type.(tup2 string (tup2 bool (tup2 int (tup2 ptime ptime))))
     {sql|
         SELECT
           name,
+          is_vegan,
+          price,
           created_at,
           updated_at
         FROM ingredients
@@ -69,18 +76,20 @@ let find_ingredient (name : string) : Model.ingredient option Lwt.t =
   in
   Lwt.return
   @@ Option.map
-       (fun (name, created_at, updated_at) ->
-         Model.{ name; created_at; updated_at })
+       (fun (name, (is_vegan, (price, (created_at, updated_at)))) ->
+         Model.{ name; is_vegan; price; created_at; updated_at })
        ingredient
 ;;
 
 let find_ingredients_request =
   Caqti_request.collect
     Caqti_type.unit
-    Caqti_type.(tup3 string ptime ptime)
+    Caqti_type.(tup2 string (tup2 bool (tup2 int (tup2 ptime ptime))))
     {sql|
         SELECT
           name,
+          is_vegan,
+          price,
           created_at,
           updated_at
         FROM ingredients
@@ -96,18 +105,20 @@ let find_ingredients () : Model.ingredient list Lwt.t =
   in
   Lwt.return
   @@ List.map
-       ~f:(fun (name, created_at, updated_at) ->
-         Model.{ name; created_at; updated_at })
+       ~f:(fun (name, (is_vegan, (price, (created_at, updated_at)))) ->
+         Model.{ name; is_vegan; price; created_at; updated_at })
        ingredients
 ;;
 
 let find_ingredients_of_pizza_request =
   Caqti_request.collect
     Caqti_type.string
-    Caqti_type.(tup3 string ptime ptime)
+    Caqti_type.(tup2 string (tup2 bool (tup2 int (tup2 ptime ptime))))
     {sql|
         SELECT
           ingredients.name,
+          ingredients.is_vegan,
+          ingredients.price,
           ingredients.created_at,
           ingredients.updated_at
         FROM ingredients
@@ -128,8 +139,8 @@ let find_ingredients_of_pizza (name : string) : Model.ingredient list Lwt.t =
   in
   Lwt.return
   @@ List.map
-       ~f:(fun (name, created_at, updated_at) ->
-         Model.{ name; created_at; updated_at })
+       ~f:(fun (name, (is_vegan, (price, (created_at, updated_at)))) ->
+         Model.{ name; is_vegan; price; created_at; updated_at })
        ingredients
 ;;
 

@@ -15,12 +15,12 @@ let clean =
 let find_ingredient name = Repo.find_ingredient name
 let find_ingredients = Repo.find_ingredients
 
-let create_ingredient name : (ingredient, string) Result.t Lwt.t =
+let create_ingredient name is_vegan price : (ingredient, string) Result.t Lwt.t =
   let open Lwt.Syntax in
   let* ingredient = find_ingredient name in
   match ingredient with
   | None ->
-    let ingredient = create_ingredient name in
+    let ingredient = create_ingredient name is_vegan price in
     let* () = Repo.insert_ingredient ingredient in
     let* ingredient = Repo.find_ingredient name in
     (match ingredient with
