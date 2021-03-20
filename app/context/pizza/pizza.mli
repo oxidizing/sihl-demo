@@ -28,6 +28,7 @@ val create_ingredient
   -> int
   -> (ingredient, string) result Lwt.t
 
+val update_ingredient : ingredient -> (ingredient, string) result Lwt.t
 val delete_ingredient : ingredient -> unit Lwt.t
 
 (** Pizzas *)

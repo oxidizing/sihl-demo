@@ -33,6 +33,15 @@ let create_ingredient name is_vegan price : (ingredient, string) Result.t Lwt.t 
       (Error (Format.sprintf "Ingredient '%s' already exists" ingredient.name))
 ;;
 
+let update_ingredient (ingredient : ingredient) =
+  let open Lwt.Syntax in
+  let* () = Repo.update_ingredient ingredient in
+  let* updated = Repo.find_ingredient ingredient.name in
+  match updated with
+  | Some updated -> Lwt.return (Ok updated)
+  | None -> Lwt.return @@ Error "Failed to update ingredient"
+;;
+
 let delete_ingredient (ingredient : ingredient) =
   Repo.delete_ingredient ingredient
 ;;

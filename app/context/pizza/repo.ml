@@ -51,6 +51,31 @@ let insert_ingredient (ingredient : Model.ingredient) =
             , (ingredient.Model.created_at, ingredient.Model.updated_at) ) ) ))
 ;;
 
+let update_ingredient_request =
+  Caqti_request.exec
+    Caqti_type.(tup2 string (tup2 bool (tup2 int (tup2 ptime ptime))))
+    {sql|
+        UPDATE ingredients SET
+          name = $1,
+          is_vegan = $2,
+          price = $3,
+          created_at = $4,
+          updated_at = $5
+        WHERE name = $1;
+        |sql}
+;;
+
+let update_ingredient (ingredient : Model.ingredient) =
+  Sihl.Database.query' (fun connection ->
+      let module Connection = (val connection : Caqti_lwt.CONNECTION) in
+      Connection.exec
+        update_ingredient_request
+        ( ingredient.Model.name
+        , ( ingredient.Model.is_vegan
+          , ( ingredient.Model.price
+            , (ingredient.Model.created_at, ingredient.Model.updated_at) ) ) ))
+;;
+
 let find_ingredient_request =
   Caqti_request.find_opt
     Caqti_type.string
@@ -93,6 +118,7 @@ let find_ingredients_request =
           created_at,
           updated_at
         FROM ingredients
+        ORDER BY id DESC
         |sql}
 ;;
 
@@ -211,7 +237,7 @@ let find_pizzas_request =
         |sql}
 ;;
 
-let find_pizzas () = failwith "todo"
+let find_pizzas () = failwith "todo find_pizzas"
 
 (*   let open Lwt.Syntax in
  *   let* pizzas =

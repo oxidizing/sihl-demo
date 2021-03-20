@@ -11,23 +11,13 @@ let index req =
 ;;
 
 let new_ req =
-  let open Tyxml in
+  let open Lwt.Syntax in
   let csrf = Sihl.Web.Csrf.find req |> Option.get in
-  let form =
-    [%html
-      {|
-<form action="/ingredients" method="Post">
-  <input type="hidden" name="_csrf" value="|}
-        csrf
-        {|">
-  <input name="name">
-  <input type="submit" value="Create">
-</form>
-|}]
-  in
+  let alert = Sihl.Web.Flash.find_alert req in
+  let notice = Sihl.Web.Flash.find_notice req in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   Lwt.return
-  @@ Sihl.Web.Response.of_plain_text
-       (Format.asprintf "%a" (Html.pp_elt ()) form)
+  @@ Sihl.Web.Response.of_html (View.Ingredients.new_ user ~alert ~notice csrf)
 ;;
 
 let create req =
@@ -61,45 +51,56 @@ let create req =
 
 let show req =
   let open Lwt.Syntax in
-  let open Tyxml in
   let name = Sihl.Web.Router.param req "name" in
+  let alert = Sihl.Web.Flash.find_alert req in
+  let notice = Sihl.Web.Flash.find_notice req in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let* ingredient = Pizza.find_ingredient name |> Lwt.map Option.get in
-  let html =
-    [%html
-      {|<div><span>Name:</span><span>|}
-        [ Html.txt ingredient.Pizza.name ]
-        {|</span></div>|}]
-  in
   Lwt.return
-  @@ Sihl.Web.Response.of_plain_text
-       (Format.asprintf "%a" (Html.pp_elt ()) html)
+  @@ Sihl.Web.Response.of_html
+       (View.Ingredients.show user ~alert ~notice ingredient)
 ;;
 
 let edit req =
-  let open Tyxml in
+  let open Lwt.Syntax in
   let name = Sihl.Web.Router.param req "name" in
+  let* ingredient = Pizza.find_ingredient name |> Lwt.map Option.get in
   let csrf = Sihl.Web.Csrf.find req |> Option.get in
-  let form =
-    [%html
-      {|
-<form action="|}
-        (Format.sprintf "/ingredients/%s" name)
-        {|" method="Post">
-  <input type="hidden" name="_csrf" value="|}
-        csrf
-        {|">
-  <input type="hidden" name="_method" value="Put">
-  <input name="name">
-  <input type="submit" value="Update">
-</form>
-|}]
-  in
+  let alert = Sihl.Web.Flash.find_alert req in
+  let notice = Sihl.Web.Flash.find_notice req in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   Lwt.return
-  @@ Sihl.Web.Response.of_plain_text
-       (Format.asprintf "%a" (Html.pp_elt ()) form)
+  @@ Sihl.Web.Response.of_html
+       (View.Ingredients.edit user ~alert ~notice ~csrf ingredient)
 ;;
 
-let update _ = failwith "todo"
+let update req =
+  let open Lwt.Syntax in
+  let* name = Sihl.Web.Request.urlencoded "name" req in
+  let* is_vegan = Sihl.Web.Request.urlencoded "is_vegan" req in
+  let* price = Sihl.Web.Request.urlencoded "price" req in
+  match name, is_vegan, price with
+  | Some name, Some is_vegan, Some price ->
+    let* ingredient = Pizza.find_ingredient name |> Lwt.map Option.get in
+    let is_vegan = bool_of_string is_vegan in
+    let price = int_of_string price in
+    let updated = Pizza.{ ingredient with is_vegan; price } in
+    let* updated = Pizza.update_ingredient updated in
+    (match updated with
+    | Ok updated ->
+      Sihl.Web.Response.redirect_to "/ingredients"
+      |> Sihl.Web.Flash.set_notice
+           (Some (Format.sprintf "Ingredient '%s' updated" updated.Pizza.name))
+      |> Lwt.return
+    | Error msg ->
+      Sihl.Web.Response.redirect_to "/ingredients"
+      |> Sihl.Web.Flash.set_alert (Some msg)
+      |> Lwt.return)
+  | _ ->
+    Sihl.Web.Response.redirect_to "/ingredients"
+    |> Sihl.Web.Flash.set_alert (Some "Invalid input provided")
+    |> Lwt.return
+;;
 
 let delete req =
   let open Lwt.Syntax in
