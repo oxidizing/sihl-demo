@@ -3,7 +3,7 @@ open Tyxml
 let%html create_form csrf =
   {|
 <form action="/ingredients" method="Post">
-  <input type="hidden" name="csrf" value="|}
+  <input type="hidden" name="_csrf" value="|}
     csrf
     {|">
   <input name="name">
@@ -17,7 +17,7 @@ let%html delete_button (ingredient : Pizza.ingredient) csrf =
 <form action="|}
     (Format.sprintf "/ingredients/%s/delete" ingredient.Pizza.name)
     {|" method="Post">
-  <input type="hidden" name="csrf" value="|}
+  <input type="hidden" name="_csrf" value="|}
     csrf
     {|">
   <input type="submit" value="Delete">
