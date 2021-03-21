@@ -12,39 +12,51 @@ let clean =
   else Repo.clean
 ;;
 
-let find_ingredient name = Repo.find_ingredient name
-let find_ingredients = Repo.find_ingredients
+module type SERVICE = sig
+  type t
 
-let create_ingredient name is_vegan price : (ingredient, string) Result.t Lwt.t =
-  let open Lwt.Syntax in
-  let* ingredient = find_ingredient name in
-  match ingredient with
-  | None ->
-    let ingredient = create_ingredient name is_vegan price in
-    let* () = Repo.insert_ingredient ingredient in
-    let* ingredient = Repo.find_ingredient name in
-    (match ingredient with
-    | Some ingredient -> Lwt.return (Ok ingredient)
+  val find : string -> t option Lwt.t
+  val query : unit -> t list Lwt.t
+  val create : string -> bool -> int -> (t, string) result Lwt.t
+  val update : t -> (t, string) result Lwt.t
+  val delete : t -> unit Lwt.t
+end
+
+module Ingredient : SERVICE with type t = ingredient = struct
+  type t = ingredient
+
+  let find name = Repo.find_ingredient name
+  let query = Repo.find_ingredients
+
+  let create name is_vegan price : (ingredient, string) Result.t Lwt.t =
+    let open Lwt.Syntax in
+    let* ingredient = find name in
+    match ingredient with
     | None ->
-      Logs.err (fun m -> m "Failed to create ingredient '%s'" name);
-      raise @@ Exception "Failed to create ingredient")
-  | Some ingredient ->
-    Lwt.return
-      (Error (Format.sprintf "Ingredient '%s' already exists" ingredient.name))
-;;
+      let ingredient = create_ingredient name is_vegan price in
+      let* () = Repo.insert_ingredient ingredient in
+      let* ingredient = Repo.find_ingredient name in
+      (match ingredient with
+      | Some ingredient -> Lwt.return (Ok ingredient)
+      | None ->
+        Logs.err (fun m -> m "Failed to create ingredient '%s'" name);
+        raise @@ Exception "Failed to create ingredient")
+    | Some ingredient ->
+      Lwt.return
+        (Error (Format.sprintf "Ingredient '%s' already exists" ingredient.name))
+  ;;
 
-let update_ingredient (ingredient : ingredient) =
-  let open Lwt.Syntax in
-  let* () = Repo.update_ingredient ingredient in
-  let* updated = Repo.find_ingredient ingredient.name in
-  match updated with
-  | Some updated -> Lwt.return (Ok updated)
-  | None -> Lwt.return @@ Error "Failed to update ingredient"
-;;
+  let update (ingredient : ingredient) =
+    let open Lwt.Syntax in
+    let* () = Repo.update_ingredient ingredient in
+    let* updated = Repo.find_ingredient ingredient.name in
+    match updated with
+    | Some updated -> Lwt.return (Ok updated)
+    | None -> Lwt.return @@ Error "Failed to update ingredient"
+  ;;
 
-let delete_ingredient (ingredient : ingredient) =
-  Repo.delete_ingredient ingredient
-;;
+  let delete (ingredient : ingredient) = Repo.delete_ingredient ingredient
+end
 
 let add_ingredient_to_pizza (pizza : string) (ingredient : ingredient) =
   Repo.add_ingredient_to_pizza pizza ingredient.name

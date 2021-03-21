@@ -56,7 +56,7 @@ let index user ~alert ~notice csrf (ingredients : Pizza.ingredient list) =
     [ alert_message alert; notice_message notice; create_link; ingredients ]
 ;;
 
-let new_ user ~alert ~notice csrf =
+let new' user ~alert ~notice csrf =
   let form =
     [%html
       {|

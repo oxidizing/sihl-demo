@@ -4,34 +4,34 @@ let index req =
   let alert = Sihl.Web.Flash.find_alert req in
   let notice = Sihl.Web.Flash.find_notice req in
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
-  let* ingredients = Pizza.find_ingredients () in
+  let* ingredients = Pizza.Ingredient.query () in
   Lwt.return
   @@ Sihl.Web.Response.of_html
        (View.Ingredients.index user ~alert ~notice csrf ingredients)
 ;;
 
-let new_ req =
+let new' req =
   let open Lwt.Syntax in
   let csrf = Sihl.Web.Csrf.find req |> Option.get in
   let alert = Sihl.Web.Flash.find_alert req in
   let notice = Sihl.Web.Flash.find_notice req in
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   Lwt.return
-  @@ Sihl.Web.Response.of_html (View.Ingredients.new_ user ~alert ~notice csrf)
+  @@ Sihl.Web.Response.of_html (View.Ingredients.new' user ~alert ~notice csrf)
 ;;
 
 let create req =
   let open Lwt.Syntax in
-  let* name = Sihl.Web.Request.urlencoded "name" req in
-  let* is_vegan = Sihl.Web.Request.urlencoded "is_vegan" req in
-  let* price = Sihl.Web.Request.urlencoded "price" req in
-  match name, is_vegan, price with
-  | Some name, Some is_vegan, Some price ->
+  let* urlencoded = Sihl.Web.Request.to_urlencoded req in
+  let ingredient = Conformist.decode Pizza.ingredient_schema urlencoded in
+  let result = Conformist.validate Pizza.ingredient_schema urlencoded in
+  match ingredient, result with
+  | Ok ingredient, [] ->
     let* ingredient =
-      Pizza.create_ingredient
-        name
-        (bool_of_string is_vegan)
-        (int_of_string price)
+      Pizza.Ingredient.create
+        ingredient.Pizza.name
+        ingredient.Pizza.is_vegan
+        ingredient.Pizza.price
     in
     (match ingredient with
     | Ok ingredient ->
@@ -43,7 +43,12 @@ let create req =
       Sihl.Web.Response.redirect_to "/ingredients"
       |> Sihl.Web.Flash.set_alert msg
       |> Lwt.return)
-  | _ ->
+  | Error msg, _ ->
+    Sihl.Web.Response.redirect_to "/ingredients"
+    |> Sihl.Web.Flash.set_alert (Some msg)
+    |> Lwt.return
+  | Ok _, _ ->
+    (* TODO [jerben] render form errors *)
     Sihl.Web.Response.redirect_to "/ingredients"
     |> Sihl.Web.Flash.set_alert (Some "Invalid input provided")
     |> Lwt.return
@@ -55,7 +60,7 @@ let show req =
   let alert = Sihl.Web.Flash.find_alert req in
   let notice = Sihl.Web.Flash.find_notice req in
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
-  let* ingredient = Pizza.find_ingredient name |> Lwt.map Option.get in
+  let* ingredient = Pizza.Ingredient.find name |> Lwt.map Option.get in
   Lwt.return
   @@ Sihl.Web.Response.of_html
        (View.Ingredients.show user ~alert ~notice ingredient)
@@ -64,7 +69,7 @@ let show req =
 let edit req =
   let open Lwt.Syntax in
   let name = Sihl.Web.Router.param req "name" in
-  let* ingredient = Pizza.find_ingredient name |> Lwt.map Option.get in
+  let* ingredient = Pizza.Ingredient.find name |> Lwt.map Option.get in
   let csrf = Sihl.Web.Csrf.find req |> Option.get in
   let alert = Sihl.Web.Flash.find_alert req in
   let notice = Sihl.Web.Flash.find_notice req in
@@ -76,16 +81,15 @@ let edit req =
 
 let update req =
   let open Lwt.Syntax in
-  let* name = Sihl.Web.Request.urlencoded "name" req in
-  let* is_vegan = Sihl.Web.Request.urlencoded "is_vegan" req in
-  let* price = Sihl.Web.Request.urlencoded "price" req in
-  match name, is_vegan, price with
-  | Some name, Some is_vegan, Some price ->
-    let* ingredient = Pizza.find_ingredient name |> Lwt.map Option.get in
-    let is_vegan = bool_of_string is_vegan in
-    let price = int_of_string price in
-    let updated = Pizza.{ ingredient with is_vegan; price } in
-    let* updated = Pizza.update_ingredient updated in
+  let* urlencoded = Sihl.Web.Request.to_urlencoded req in
+  let ingredient = Conformist.decode Pizza.ingredient_schema urlencoded in
+  let result = Conformist.validate Pizza.ingredient_schema urlencoded in
+  match ingredient, result with
+  | Ok ingredient, [] ->
+    let* ingredient =
+      Pizza.Ingredient.find ingredient.Pizza.name |> Lwt.map Option.get
+    in
+    let* updated = Pizza.Ingredient.update ingredient in
     (match updated with
     | Ok updated ->
       Sihl.Web.Response.redirect_to "/ingredients"
@@ -96,16 +100,21 @@ let update req =
       Sihl.Web.Response.redirect_to "/ingredients"
       |> Sihl.Web.Flash.set_alert (Some msg)
       |> Lwt.return)
-  | _ ->
+  | Ok _, _ ->
     Sihl.Web.Response.redirect_to "/ingredients"
-    |> Sihl.Web.Flash.set_alert (Some "Invalid input provided")
+    |> Sihl.Web.Flash.set_alert (Some "Invalid ingredient provided")
+    |> Lwt.return
+  | Error msg, _ ->
+    (* TODO [jerben] render form errors *)
+    Sihl.Web.Response.redirect_to "/ingredients"
+    |> Sihl.Web.Flash.set_alert (Some msg)
     |> Lwt.return
 ;;
 
 let delete req =
   let open Lwt.Syntax in
   let name = Sihl.Web.Router.param req "name" in
-  let* ingredient = Pizza.find_ingredient name in
+  let* ingredient = Pizza.Ingredient.find name in
   match ingredient with
   | None ->
     Sihl.Web.Response.redirect_to "/ingredients"
@@ -113,7 +122,7 @@ let delete req =
          (Format.sprintf "Ingredient '%s' not found" name)
     |> Lwt.return
   | Some ingredient ->
-    let* () = Pizza.delete_ingredient ingredient in
+    let* () = Pizza.Ingredient.delete ingredient in
     Sihl.Web.Response.redirect_to "/ingredients"
     |> Sihl.Web.Flash.set_notice
          (Format.sprintf "Ingredient '%s' removed" ingredient.Pizza.name)

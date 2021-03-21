@@ -24,6 +24,13 @@ let create_ingredient name is_vegan price =
   }
 ;;
 
+let[@warning "-45"] ingredient_schema
+    : (unit, string -> bool -> int -> ingredient, ingredient) Conformist.t
+  =
+  Conformist.(
+    make Field.[ string "name"; bool "is_vegan"; int "price" ] create_ingredient)
+;;
+
 type t =
   { name : string
   ; ingredients : string list

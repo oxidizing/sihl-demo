@@ -6,6 +6,9 @@ type ingredient =
   ; updated_at : Ptime.t
   }
 
+val ingredient_schema
+  : (unit, string -> bool -> int -> ingredient, ingredient) Conformist.t
+
 type t =
   { name : string
   ; ingredients : string list
@@ -19,17 +22,25 @@ val clean : unit -> unit Lwt.t
 
 (** Ingredients *)
 
-val find_ingredient : string -> ingredient option Lwt.t
-val find_ingredients : unit -> ingredient list Lwt.t
+module Ingredient : sig
+  type t = ingredient
 
-val create_ingredient
-  :  string
-  -> bool
-  -> int
-  -> (ingredient, string) result Lwt.t
+  val find : string -> ingredient option Lwt.t
+  val query : unit -> ingredient list Lwt.t
+  val create : string -> bool -> int -> (ingredient, string) result Lwt.t
+  val update : ingredient -> (ingredient, string) result Lwt.t
+  val delete : ingredient -> unit Lwt.t
+end
 
-val update_ingredient : ingredient -> (ingredient, string) result Lwt.t
-val delete_ingredient : ingredient -> unit Lwt.t
+module type SERVICE = sig
+  type t
+
+  val find : string -> t option Lwt.t
+  val query : unit -> t list Lwt.t
+  val create : string -> bool -> int -> (t, string) result Lwt.t
+  val update : t -> (t, string) result Lwt.t
+  val delete : t -> unit Lwt.t
+end
 
 (** Pizzas *)
 
