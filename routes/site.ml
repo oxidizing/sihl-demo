@@ -8,11 +8,8 @@ open Sihl.Web.Http
 let middlewares =
   [ Opium.Middleware.content_length
   ; Opium.Middleware.etag
-  ; Sihl.Web.Middleware.session ()
-  ; Sihl.Web.Middleware.form
   ; Sihl.Web.Middleware.csrf ()
   ; Sihl.Web.Middleware.flash ()
-  ; Sihl.Web.Middleware.user (fun user_id -> Service.User.find_opt ~user_id)
   ]
 ;;
 
@@ -46,9 +43,6 @@ let router_public =
 let router_admin_queue =
   Service.Queue.router
     ~back:"/"
-    ~middlewares:
-      [ Sihl.Web.Middleware.user (fun user_id -> Service.User.find_opt ~user_id)
-      ; Middleware.Authn.middleware "/login"
-      ]
+    ~middlewares:[ Middleware.Authn.middleware "/login" ]
     "/admin/queue"
 ;;

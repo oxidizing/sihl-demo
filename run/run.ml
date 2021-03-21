@@ -16,7 +16,10 @@ let services =
         ]
       ()
   ; Service.User.register ()
-  ; Service.Queue.register ~jobs:[ Job.cook_pizza; Job.order_ingredient ] ()
+  ; Service.Queue.register
+      ~jobs:
+        [ Sihl_queue.hide Job.cook_pizza; Sihl_queue.hide Job.order_ingredient ]
+      ()
   ]
 ;;
 

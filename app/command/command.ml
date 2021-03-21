@@ -22,8 +22,8 @@ let cook_pizza =
       match args with
       | [ name ] ->
         Service.Queue.dispatch
-          ~input:name
           ~delay:(Sihl.Time.Span.minutes 2)
+          name
           Job.cook_pizza
       | _ -> raise (Sihl.Command.Exception "Usage: <pizza name>"))
 ;;
@@ -37,8 +37,8 @@ let order_ingredient =
       match args with
       | [ name ] ->
         Service.Queue.dispatch
-          ~input:name
           ~delay:(Sihl.Time.Span.minutes 2)
+          name
           Job.order_ingredient
       | _ -> raise (Sihl.Command.Exception "Usage: <ingredient name>"))
 ;;

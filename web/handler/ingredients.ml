@@ -1,9 +1,9 @@
 let index req =
   let open Lwt.Syntax in
-  let csrf = Sihl.Web.Csrf.find req in
+  let csrf = Sihl.Web.Csrf.find req |> Option.get in
   let alert = Sihl.Web.Flash.find_alert req in
   let notice = Sihl.Web.Flash.find_notice req in
-  let user = Sihl.Web.User.find req in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let* ingredients = Pizza.find_ingredients () in
   Lwt.return
   @@ Sihl.Web.Response.of_html
@@ -12,7 +12,8 @@ let index req =
 
 let create req =
   let open Lwt.Syntax in
-  match Sihl.Web.Form.find "name" req with
+  let* name = Sihl.Web.Request.urlencoded "name" req in
+  match name with
   | None ->
     Sihl.Web.Response.redirect_to "/ingredients"
     |> Sihl.Web.Flash.set_alert (Some "Invalid input provided")

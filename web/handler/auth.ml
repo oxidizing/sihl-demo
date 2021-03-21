@@ -1,21 +1,24 @@
 let login_index req =
-  match Sihl.Web.User.find_opt req with
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req in
+  match user with
   | Some _ -> Sihl.Web.Response.redirect_to "/ingredients" |> Lwt.return
   | None ->
-    let csrf = Sihl.Web.Csrf.find req in
+    let csrf = Sihl.Web.Csrf.find req |> Option.get in
     let alert = Sihl.Web.Flash.find_alert req in
     Lwt.return @@ Sihl.Web.Response.of_html (View.Auth.login ~alert csrf)
 ;;
 
 let login_create req =
   let open Lwt.Syntax in
-  match Sihl.Web.Form.find_all req with
-  | [ ("email", [ email ]); ("password", [ password ]) ] ->
+  let* urlencoded = Sihl.Web.Request.to_urlencoded req in
+  match urlencoded with
+  | [ ("_csrf", _); ("email", [ email ]); ("password", [ password ]) ] ->
     let* user = Service.User.login ~email ~password in
     (match user with
     | Ok user ->
       Sihl.Web.Response.redirect_to "/ingredients"
-      |> Sihl.Web.Session.set ("user_id", Some user.Sihl.Contract.User.id)
+      |> Sihl.Web.Session.set [ "user_id", user.Sihl.Contract.User.id ]
       |> Lwt.return
     | Error _ ->
       Sihl.Web.Response.redirect_to "/login"
@@ -28,24 +31,26 @@ let login_create req =
 ;;
 
 let login_delete _ =
-  Sihl.Web.Response.redirect_to "/"
-  |> Sihl.Web.Session.set ("user_id", None)
-  |> Lwt.return
+  Sihl.Web.Response.redirect_to "/" |> Sihl.Web.Session.set [] |> Lwt.return
 ;;
 
 let registration_index req =
-  match Sihl.Web.User.find_opt req with
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req in
+  match user with
   | Some _ -> Sihl.Web.Response.redirect_to "/ingredients" |> Lwt.return
   | None ->
-    let csrf = Sihl.Web.Csrf.find req in
+    let csrf = Sihl.Web.Csrf.find req |> Option.get in
     let alert = Sihl.Web.Flash.find_alert req in
     Lwt.return @@ Sihl.Web.Response.of_html (View.Auth.registration ~alert csrf)
 ;;
 
 let registration_create req =
   let open Lwt.Syntax in
-  match Sihl.Web.Form.find_all req with
-  | [ ("email", [ email ])
+  let* urlencoded = Sihl.Web.Request.to_urlencoded req in
+  match urlencoded with
+  | [ ("_csrf", _)
+    ; ("email", [ email ])
     ; ("password", [ password ])
     ; ("password_confirmation", [ password_confirmation ])
     ] ->
@@ -55,7 +60,7 @@ let registration_create req =
     (match user with
     | Ok user ->
       Sihl.Web.Response.redirect_to "/ingredients"
-      |> Sihl.Web.Session.set ("user_id", Some user.Sihl.Contract.User.id)
+      |> Sihl.Web.Session.set [ "user_id", user.Sihl.Contract.User.id ]
       |> Lwt.return
     | Error _ ->
       Sihl.Web.Response.redirect_to "/registration"
