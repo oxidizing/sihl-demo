@@ -29,7 +29,23 @@ let[@warning "-45"] ingredient_schema
     : (unit, string -> bool -> int -> ingredient, ingredient) Conformist.t
   =
   Conformist.(
-    make Field.[ string "name"; bool "is_vegan"; int "price" ] create_ingredient)
+    make
+      Field.
+        [ string
+            ~validator:(fun name ->
+              if String.length name > 12
+              then Some "The name is too long, it has to be less than 12"
+              else None)
+            "name"
+        ; bool "is_vegan"
+        ; int
+            ~validator:(fun price ->
+              if price >= 0 && price <= 10000
+              then None
+              else Some "Price has to be positive and less than 10'000")
+            "price"
+        ]
+      create_ingredient)
 ;;
 
 type t =
