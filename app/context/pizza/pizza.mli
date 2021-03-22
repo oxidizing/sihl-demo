@@ -30,7 +30,7 @@ module Ingredient : sig
   val create : string -> bool -> int -> (t, string) result Lwt.t
   val insert : t -> (t, string) result Lwt.t
   val update : string -> t -> (t, string) result Lwt.t
-  val delete : t -> unit Lwt.t
+  val delete : t -> (unit, string) result Lwt.t
 end
 
 (** Pizzas *)

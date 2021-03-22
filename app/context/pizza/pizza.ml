@@ -57,7 +57,9 @@ module Ingredient = struct
     | None -> Lwt.return @@ Error "Failed to update ingredient"
   ;;
 
-  let delete (ingredient : ingredient) = Repo.delete_ingredient ingredient
+  let delete (ingredient : ingredient) =
+    Repo.delete_ingredient ingredient |> Lwt.map Result.ok
+  ;;
 end
 
 let add_ingredient_to_pizza (pizza : string) (ingredient : ingredient) =
