@@ -12,21 +12,23 @@ let clean =
   else Repo.clean
 ;;
 
-module type SERVICE = sig
-  type t
-
-  val find : string -> t option Lwt.t
-  val query : unit -> t list Lwt.t
-  val create : string -> bool -> int -> (t, string) result Lwt.t
-  val update : t -> (t, string) result Lwt.t
-  val delete : t -> unit Lwt.t
-end
-
-module Ingredient : SERVICE with type t = ingredient = struct
+module Ingredient = struct
   type t = ingredient
 
   let find name = Repo.find_ingredient name
   let query = Repo.find_ingredients
+
+  let insert (ingredient : ingredient) =
+    let open Lwt.Syntax in
+    let* () = Repo.insert_ingredient ingredient in
+    let* inserted = Repo.find_ingredient ingredient.name in
+    match inserted with
+    | Some ingredient -> Lwt.return (Ok ingredient)
+    | None ->
+      Logs.err (fun m ->
+          m "Failed to insert ingredient '%a'" pp_ingredient ingredient);
+      Lwt.return @@ Error "Failed to insert ingredient"
+  ;;
 
   let create name is_vegan price : (ingredient, string) Result.t Lwt.t =
     let open Lwt.Syntax in
@@ -46,7 +48,7 @@ module Ingredient : SERVICE with type t = ingredient = struct
         (Error (Format.sprintf "Ingredient '%s' already exists" ingredient.name))
   ;;
 
-  let update (ingredient : ingredient) =
+  let update _ (ingredient : ingredient) =
     let open Lwt.Syntax in
     let* () = Repo.update_ingredient ingredient in
     let* updated = Repo.find_ingredient ingredient.name in

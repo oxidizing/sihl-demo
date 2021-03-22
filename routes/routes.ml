@@ -41,13 +41,11 @@ let site_private_ =
   Sihl.Web.combine
     ~middlewares:private_middlewares
     "/"
-    (Handler.Rest.resource
-       ~index:View.Ingredients.index
-       ~new':View.Ingredients.new'
-       ~show:View.Ingredients.show
-       ~edit:View.Ingredients.edit
+    (Rest.resource
        "ingredients"
-       (module Pizza.Ingredient : Pizza.SERVICE with type t = Pizza.ingredient))
+       Pizza.ingredient_schema
+       (module Pizza.Ingredient : Rest.SERVICE with type t = Pizza.ingredient)
+       (module View.Ingredients : Rest.VIEW with type t = Pizza.ingredient))
 ;;
 
 let api = Sihl.Web.combine "/api" []

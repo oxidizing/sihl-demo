@@ -1,0 +1,3 @@
+(library
+ (name rest)
+ (libraries sihl))

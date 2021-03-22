@@ -25,20 +25,11 @@ val clean : unit -> unit Lwt.t
 module Ingredient : sig
   type t = ingredient
 
-  val find : string -> ingredient option Lwt.t
-  val query : unit -> ingredient list Lwt.t
-  val create : string -> bool -> int -> (ingredient, string) result Lwt.t
-  val update : ingredient -> (ingredient, string) result Lwt.t
-  val delete : ingredient -> unit Lwt.t
-end
-
-module type SERVICE = sig
-  type t
-
   val find : string -> t option Lwt.t
   val query : unit -> t list Lwt.t
   val create : string -> bool -> int -> (t, string) result Lwt.t
-  val update : t -> (t, string) result Lwt.t
+  val insert : t -> (t, string) result Lwt.t
+  val update : string -> t -> (t, string) result Lwt.t
   val delete : t -> unit Lwt.t
 end
 

@@ -1,5 +1,7 @@
 open Tyxml
 
+type t = Pizza.ingredient
+
 let%html delete_button (ingredient : Pizza.ingredient) csrf =
   {|
 <form action="|}
@@ -30,7 +32,9 @@ let notice_message notice =
   [%html {|<span>|} [ Html.txt (Option.value notice ~default:"") ] {|</span>|}]
 ;;
 
-let index user ~alert ~notice csrf (ingredients : Pizza.ingredient list) =
+let index req (alert, notice) csrf (ingredients : Pizza.ingredient list) =
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let list_items =
     List.map
       ~f:(fun (ingredient : Pizza.ingredient) ->
@@ -51,12 +55,15 @@ let index user ~alert ~notice csrf (ingredients : Pizza.ingredient list) =
     [%html
       {|<table><tbody>|} (List.cons list_header list_items) {|</tbody></table>|}]
   in
-  Layout.page
-    (Some user)
-    [ alert_message alert; notice_message notice; create_link; ingredients ]
+  Lwt.return
+  @@ Layout.page
+       (Some user)
+       [ alert_message alert; notice_message notice; create_link; ingredients ]
 ;;
 
-let new' user ~alert ~notice csrf =
+let new' req (alert, notice) csrf =
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let form =
     [%html
       {|
@@ -75,10 +82,15 @@ let new' user ~alert ~notice csrf =
 </form>
 |}]
   in
-  Layout.page (Some user) [ alert_message alert; notice_message notice; form ]
+  Lwt.return
+  @@ Layout.page
+       (Some user)
+       [ alert_message alert; notice_message notice; form ]
 ;;
 
-let show user ~alert ~notice (ingredient : Pizza.ingredient) =
+let show req (alert, notice) (ingredient : Pizza.ingredient) =
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let body =
     [%html
       {|<div>
@@ -93,10 +105,15 @@ let show user ~alert ~notice (ingredient : Pizza.ingredient) =
         {|</span>
         </div>|}]
   in
-  Layout.page (Some user) [ alert_message alert; notice_message notice; body ]
+  Lwt.return
+  @@ Layout.page
+       (Some user)
+       [ alert_message alert; notice_message notice; body ]
 ;;
 
-let edit user ~alert ~notice ~csrf (ingredient : Pizza.ingredient) =
+let edit req (alert, notice) csrf (ingredient : Pizza.ingredient) =
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let checkbox =
     if ingredient.Pizza.is_vegan
     then
@@ -130,5 +147,8 @@ let edit user ~alert ~notice ~csrf (ingredient : Pizza.ingredient) =
 </form>
 |}]
   in
-  Layout.page (Some user) [ alert_message alert; notice_message notice; form ]
+  Lwt.return
+  @@ Layout.page
+       (Some user)
+       [ alert_message alert; notice_message notice; form ]
 ;;

@@ -14,6 +14,7 @@ type ingredient =
   ; created_at : Ptime.t
   ; updated_at : Ptime.t
   }
+[@@deriving show]
 
 let create_ingredient name is_vegan price =
   { name
