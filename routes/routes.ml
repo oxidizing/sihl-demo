@@ -13,16 +13,14 @@ let global_middlewares =
 
 let site_middlewares =
   [ Opium.Middleware.content_length
-  ; Opium.Middleware.etag
   ; Sihl.Web.Middleware.csrf ()
   ; Sihl.Web.Middleware.flash ()
   ]
 ;;
 
 let site_public =
-  Sihl.Web.combine
+  Sihl.Web.choose
     ~middlewares:site_middlewares
-    "/"
     Sihl.Web.
       [ get "/" Handler.Welcome.index
       ; get "/login" Handler.Auth.login_index
@@ -38,9 +36,8 @@ let private_middlewares =
 ;;
 
 let site_private_ =
-  Sihl.Web.combine
+  Sihl.Web.choose
     ~middlewares:private_middlewares
-    "/"
     (Rest.resource
        "ingredients"
        Pizza.ingredient_schema
@@ -48,5 +45,5 @@ let site_private_ =
        (module View.Ingredients : Rest.VIEW with type t = Pizza.ingredient))
 ;;
 
-let api = Sihl.Web.combine "/api" []
-let router = Sihl.Web.combine "/" [ site_public; site_private_; api ]
+let api = Sihl.Web.choose ~scope:"/api" []
+let router = Sihl.Web.choose [ site_public; site_private_; api ]

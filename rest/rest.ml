@@ -1,4 +1,7 @@
-let singularize = CCString.drop_while (fun char -> not (Char.equal 's' char))
+let singularize str =
+  Option.value ~default:str (CCString.chop_suffix ~suf:"s" str)
+;;
+
 let capitalize = CCString.capitalize_ascii
 
 module type SERVICE = sig
@@ -17,26 +20,19 @@ module type VIEW = sig
 
   val index
     :  Rock.Request.t
-    -> string option * string option
     -> string
     -> t list
     -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
 
   val new'
     :  Rock.Request.t
-    -> string option * string option
     -> string
     -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
 
-  val show
-    :  Rock.Request.t
-    -> string option * string option
-    -> t
-    -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
+  val show : Rock.Request.t -> t -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
 
   val edit
     :  Rock.Request.t
-    -> string option * string option
     -> string
     -> t
     -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
@@ -66,106 +62,131 @@ module type CONTROLLER = sig
   val delete' : string -> Rock.Request.t -> Rock.Response.t Lwt.t
 end
 
-module MakeController
-    (Service : SERVICE)
-    (Resource : VIEW with type t = Service.t) =
+module MakeController (Service : SERVICE) (View : VIEW with type t = Service.t) =
 struct
+  exception Exception of string
+
   type t = Service.t
 
-  let index _ req =
+  let index name req =
     let open Lwt.Syntax in
-    let csrf = Sihl.Web.Csrf.find req |> Option.get in
-    let alert = Sihl.Web.Flash.find_alert req in
-    let notice = Sihl.Web.Flash.find_notice req in
+    let csrf =
+      match Sihl.Web.Csrf.find req with
+      | None ->
+        Logs.err (fun m ->
+            m "CSRF middleware not installed for resource '%s'" name);
+        raise @@ Exception "CSRF middleware not installed"
+      | Some token -> token
+    in
     let* things = Service.query () in
-    let* html = Resource.index req (alert, notice) csrf things in
+    let* html = View.index req csrf things in
     Lwt.return @@ Sihl.Web.Response.of_html html
   ;;
 
-  let new' _ req =
+  let new' name req =
     let open Lwt.Syntax in
-    let csrf = Sihl.Web.Csrf.find req |> Option.get in
-    let alert = Sihl.Web.Flash.find_alert req in
-    let notice = Sihl.Web.Flash.find_notice req in
-    let* html = Resource.new' req (alert, notice) csrf in
+    let csrf =
+      match Sihl.Web.Csrf.find req with
+      | None ->
+        Logs.err (fun m ->
+            m "CSRF middleware not installed for resource '%s'" name);
+        raise @@ Exception "CSRF middleware not installed"
+      | Some token -> token
+    in
+    let* html = View.new' req csrf in
     Lwt.return @@ Sihl.Web.Response.of_html html
   ;;
 
   let create name schema req =
     let open Lwt.Syntax in
     let* urlencoded = Sihl.Web.Request.to_urlencoded req in
-    let thing = Conformist.decode schema urlencoded in
-    let result = Conformist.validate schema urlencoded in
-    match thing, result with
-    | Ok thing, [] ->
+    let thing = Conformist.decode_and_validate schema urlencoded in
+    match thing with
+    | Ok thing ->
       let* thing = Service.insert thing in
       (match thing with
       | Ok _ ->
         Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-        |> Sihl.Web.Flash.set_notice (Some "Successfully added")
+        |> Sihl.Web.Flash.set_notice
+             (Format.sprintf "Successfully added %s" (singularize name))
         |> Lwt.return
       | Error msg ->
         Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-        |> Sihl.Web.Flash.set_alert (Some msg)
+        |> Sihl.Web.Flash.set_alert msg
         |> Lwt.return)
-    | Error msg, _ ->
+    | Error errors ->
       Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-      |> Sihl.Web.Flash.set_alert (Some msg)
-      |> Lwt.return
-    | Ok _, _ ->
-      (* TODO [jerben] render form errors *)
-      Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-      |> Sihl.Web.Flash.set_alert (Some "Invalid input provided")
+      |> Sihl.Web.Flash.set_alert "Some of the input provided is invalid"
+      |> Sihl.Web.Flash.set errors
       |> Lwt.return
   ;;
 
-  let show _ req =
+  let show name req =
     let open Lwt.Syntax in
     let id = Sihl.Web.Router.param req "id" in
-    let alert = Sihl.Web.Flash.find_alert req in
-    let notice = Sihl.Web.Flash.find_notice req in
-    let* thing = Service.find id |> Lwt.map Option.get in
-    let* html = Resource.show req (alert, notice) thing in
-    Lwt.return @@ Sihl.Web.Response.of_html html
+    let* thing = Service.find id in
+    match thing with
+    | Some thing ->
+      let* html = View.show req thing in
+      Lwt.return @@ Sihl.Web.Response.of_html html
+    | None ->
+      Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
+      |> Sihl.Web.Flash.set_alert
+           (Format.sprintf
+              "%s with id '%s' not found"
+              (singularize (capitalize name))
+              id)
+      |> Lwt.return
   ;;
 
-  let edit _ req =
+  let edit name req =
     let open Lwt.Syntax in
     let id = Sihl.Web.Router.param req "id" in
-    let* thing = Service.find id |> Lwt.map Option.get in
-    let csrf = Sihl.Web.Csrf.find req |> Option.get in
-    let alert = Sihl.Web.Flash.find_alert req in
-    let notice = Sihl.Web.Flash.find_notice req in
-    let* html = Resource.edit req (alert, notice) csrf thing in
-    Lwt.return @@ Sihl.Web.Response.of_html html
+    let* thing = Service.find id in
+    match thing with
+    | Some thing ->
+      let csrf =
+        match Sihl.Web.Csrf.find req with
+        | None ->
+          Logs.err (fun m ->
+              m "CSRF middleware not installed for resource '%s'" name);
+          raise @@ Exception "CSRF middleware not installed"
+        | Some token -> token
+      in
+      let* html = View.edit req csrf thing in
+      Lwt.return @@ Sihl.Web.Response.of_html html
+    | None ->
+      Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
+      |> Sihl.Web.Flash.set_alert
+           (Format.sprintf
+              "%s with id '%s' not found"
+              (singularize (capitalize name))
+              id)
+      |> Lwt.return
   ;;
 
   let update name schema req =
     let open Lwt.Syntax in
     let* urlencoded = Sihl.Web.Request.to_urlencoded req in
-    let thing = Conformist.decode schema urlencoded in
-    let result = Conformist.validate schema urlencoded in
+    let thing = Conformist.decode_and_validate schema urlencoded in
     let id = Sihl.Web.Router.param req "id" in
-    match thing, result with
-    | Ok thing, [] ->
+    match thing with
+    | Ok thing ->
       let* updated = Service.update id thing in
       (match updated with
       | Ok _ ->
         Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-        |> Sihl.Web.Flash.set_notice (Some "Successfully updated")
+        |> Sihl.Web.Flash.set_notice
+             (Format.sprintf "Successfully updated %s" (singularize name))
         |> Lwt.return
       | Error msg ->
         Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-        |> Sihl.Web.Flash.set_alert (Some msg)
+        |> Sihl.Web.Flash.set_alert msg
         |> Lwt.return)
-    | Ok _, _ ->
-      Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-      |> Sihl.Web.Flash.set_alert (Some "Invalid values provided")
-      |> Lwt.return
-    | Error msg, _ ->
-      (* TODO [jerben] render form errors *)
-      Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-      |> Sihl.Web.Flash.set_alert (Some msg)
+    | Error errors ->
+      Sihl.Web.Response.redirect_to (Format.sprintf "/%s/%s/edit" name id)
+      |> Sihl.Web.Flash.set_alert "Some of the input provided is invalid"
+      |> Sihl.Web.Flash.set errors
       |> Lwt.return
   ;;
 
@@ -176,20 +197,24 @@ struct
     match thing with
     | None ->
       Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-      |> Sihl.Web.Flash.set_notice
-           (Some (Format.sprintf "Id '%s' not found" id))
+      |> Sihl.Web.Flash.set_alert
+           (Format.sprintf
+              "%s with id '%s' not found"
+              (singularize (capitalize name))
+              id)
       |> Lwt.return
     | Some thing ->
       let* result = Service.delete thing in
       (match result with
       | Ok () ->
         Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-        |> Sihl.Web.Flash.set_notice (Some "Successfully removed")
+        |> Sihl.Web.Flash.set_notice
+             (Format.sprintf "Successfully updated %s" (singularize name))
         |> Lwt.return
       | Error msg ->
         Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
         |> Sihl.Web.Flash.set_notice
-             (Some (Format.sprintf "Failed to remove: '%s'" msg))
+             (Format.sprintf "Failed to remove %s: '%s'" (singularize name) msg)
         |> Lwt.return)
   ;;
 end

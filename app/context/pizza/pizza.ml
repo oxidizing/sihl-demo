@@ -36,13 +36,7 @@ module Ingredient = struct
     match ingredient with
     | None ->
       let ingredient = create_ingredient name is_vegan price in
-      let* () = Repo.insert_ingredient ingredient in
-      let* ingredient = Repo.find_ingredient name in
-      (match ingredient with
-      | Some ingredient -> Lwt.return (Ok ingredient)
-      | None ->
-        Logs.err (fun m -> m "Failed to create ingredient '%s'" name);
-        raise @@ Exception "Failed to create ingredient")
+      insert ingredient
     | Some ingredient ->
       Lwt.return
         (Error (Format.sprintf "Ingredient '%s' already exists" ingredient.name))

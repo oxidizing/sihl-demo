@@ -41,7 +41,7 @@ let find_ingredients _ () =
          (List.map ~f:(fun (ingredient : Pizza.ingredient) ->
               ingredient.Pizza.name))
   in
-  Alcotest.(check (list string) "has pizza" [ "ham"; "tomato" ] ingredients);
+  Alcotest.(check (list string) "has pizza" [ "tomato"; "ham" ] ingredients);
   Lwt.return ()
 ;;
 
@@ -109,7 +109,7 @@ let find_pizzas _ () =
          (List.map ~f:(fun (ingredient : Pizza.ingredient) ->
               ingredient.Pizza.name))
   in
-  Alcotest.(check (list string) "has pizza" [ "ham"; "tomato" ] ingredients);
+  Alcotest.(check (list string) "has pizza" [ "tomato"; "ham" ] ingredients);
   Lwt.return ()
 ;;
 
