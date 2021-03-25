@@ -169,11 +169,11 @@ let edit req csrf (ingredient : Pizza.ingredient) =
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  let name_value, name_error = Rest.Form.find "name" req in
-  let vegan_value, _ = Rest.Form.find "is_vegan" req in
+  let name, name_error = Rest.Form.find "name" req in
+  let vegan, _ = Rest.Form.find "is_vegan" req in
   let price_value, price_error = Rest.Form.find "price" req in
   let checkbox =
-    if Option.bind vegan_value bool_of_string_opt |> Option.value ~default:false
+    if Option.equal String.equal vegan (Some "true")
     then
       [%html {|<input type="checkbox" name="is_vegan" value="true" checked>|}]
     else [%html {|<input type="checkbox" name="is_vegan" value="true">|}]
@@ -191,7 +191,7 @@ let edit req csrf (ingredient : Pizza.ingredient) =
   <div>
     <span>Name</span>
     <input name="name" value="|}
-        (Option.value ~default:ingredient.Pizza.name name_value)
+        (Option.value ~default:ingredient.Pizza.name name)
         {|">
   </div>
   <p class="alert">|}
