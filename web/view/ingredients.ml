@@ -16,8 +16,12 @@ let%html delete_button (ingredient : Pizza.ingredient) csrf =
 |}
 ;;
 
-let list_header = [%html {|<tr></tr>|}]
-let create_link = [%html {|<a href="/ingredients/new">Create</a>|}]
+let list_header =
+  [%html
+    {|<tr><th>Name</th><th>Price</th><th>Vegan</th><th>Update at</th><th>Created at</th></tr>|}]
+;;
+
+let create_link = [%html {|<div><a href="/ingredients/new">Create</a></div>|}]
 
 let edit_link name =
   [%html
@@ -47,8 +51,14 @@ let index req csrf (ingredients : Pizza.ingredient list) =
     List.map
       ~f:(fun (ingredient : Pizza.ingredient) ->
         [%html
-          {|<tr><td>|}
+          {|<tr><td><a href="|}
+            (Format.sprintf "/ingredients/%s" ingredient.Pizza.name)
+            {|">|}
             [ Html.txt ingredient.Pizza.name ]
+            {|</a></td><td>|}
+            [ Html.txt (string_of_int ingredient.Pizza.price) ]
+            {|</td><td>|}
+            [ Html.txt (string_of_bool ingredient.Pizza.is_vegan) ]
             {|</td><td>|}
             [ Html.txt (Ptime.to_rfc3339 ingredient.Pizza.created_at) ]
             {|</td><td>|}
@@ -61,7 +71,9 @@ let index req csrf (ingredients : Pizza.ingredient list) =
   in
   let ingredients =
     [%html
-      {|<table><tbody>|} (List.cons list_header list_items) {|</tbody></table>|}]
+      {|<div><span>Ingredients</span><table><tbody>|}
+        (List.cons list_header list_items)
+        {|</tbody></table></div>|}]
   in
   Lwt.return
   @@ Layout.page
@@ -74,6 +86,15 @@ let new' req csrf =
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
+  let name_value, name_error = Rest.Form.find "name" req in
+  let vegan_value, _ = Rest.Form.find "is_vegan" req in
+  let price_value, price_error = Rest.Form.find "price" req in
+  let checkbox =
+    if Option.bind vegan_value bool_of_string_opt |> Option.value ~default:false
+    then
+      [%html {|<input type="checkbox" name="is_vegan" value="true" checked>|}]
+    else [%html {|<input type="checkbox" name="is_vegan" value="true">|}]
+  in
   let form =
     [%html
       {|
@@ -81,14 +102,33 @@ let new' req csrf =
   <input type="hidden" name="_csrf" value="|}
         csrf
         {|">
-  <span>Name</span>
-  <input name="name">
-  <span>Is vegan?</span>
-  <input type="checkbox" name="is_vegan" value="true">
-  <input type="hidden" name="is_vegan" value="false">
-  <span>Price</span>
-  <input name="price">
-  <input type="submit" value="Create">
+  <div>
+    <span>Name</span>
+    <input name="name" value="|}
+        (Option.value ~default:"" name_value)
+        {|">
+  </div>
+  <p class="alert">|}
+        [ Html.txt (Option.value ~default:"" name_error) ]
+        {|</p>
+  <div>
+    <label>Is it vegan?</label>|}
+        [ checkbox ]
+        {|
+    <input type="hidden" name="is_vegan" value="false">
+  </div>
+  <div>
+    <label>Price</label>
+    <input name="price" value="|}
+        (Option.value ~default:"" price_value)
+        {|">
+  </div>
+  <p class="alert">|}
+        [ Html.txt (Option.value ~default:"" price_error) ]
+        {|</p>
+  <div>
+    <input type="submit" value="Create">
+  </div>
 </form>
 |}]
   in
@@ -105,17 +145,18 @@ let show req (ingredient : Pizza.ingredient) =
   let alert = Sihl.Web.Flash.find_alert req in
   let body =
     [%html
-      {|<div>
-          <span>Name:</span><span>|}
+      {|<div><div>
+          <span>Name: </span><span>|}
         [ Html.txt ingredient.Pizza.name ]
-        {|</span>
-          <span>Is vegan?</span><span>|}
+        {|</span></div>
+        <div><span>Vegan: </span><span>|}
         [ Html.txt (string_of_bool ingredient.Pizza.is_vegan) ]
-        {|</span>
-          <span>Price</span><span>|}
+        {|</span></div>
+         <div><span>Price: </span><span>|}
         [ Html.txt (string_of_int ingredient.Pizza.price) ]
-        {|</span>
-        </div>|}]
+        {|</span></div>|}
+        [ edit_link ingredient.Pizza.name ]
+        {|</div>|}]
   in
   Lwt.return
   @@ Layout.page
@@ -128,18 +169,14 @@ let edit req csrf (ingredient : Pizza.ingredient) =
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
+  let name_value, name_error = Rest.Form.find "name" req in
+  let vegan_value, _ = Rest.Form.find "is_vegan" req in
+  let price_value, price_error = Rest.Form.find "price" req in
   let checkbox =
-    if ingredient.Pizza.is_vegan
+    if Option.bind vegan_value bool_of_string_opt |> Option.value ~default:false
     then
       [%html {|<input type="checkbox" name="is_vegan" value="true" checked>|}]
     else [%html {|<input type="checkbox" name="is_vegan" value="true">|}]
-  in
-  let price_error =
-    [%html
-      {| <span>|}
-        [ Html.txt (Sihl.Web.Flash.find "price" req |> Option.value ~default:"")
-        ]
-        {|</span>|}]
   in
   let form =
     [%html
@@ -151,21 +188,33 @@ let edit req csrf (ingredient : Pizza.ingredient) =
         csrf
         {|">
   <input type="hidden" name="_method" value="put">
-  <span>Name</span>
-  <input name="name" value="|}
-        ingredient.Pizza.name
+  <div>
+    <span>Name</span>
+    <input name="name" value="|}
+        (Option.value ~default:ingredient.Pizza.name name_value)
         {|">
-  <span>Is vegan?</span>
+  </div>
+  <p class="alert">|}
+        [ Html.txt (Option.value ~default:"" name_error) ]
+        {|</p>
+  <div>
+    <label>Is it vegan?</label>
          |}
         [ checkbox ]
         {|
-  <input type="hidden" name="is_vegan" value="false">
-  <span>Price</span>|}
-        [ price_error ]
-        {|
-  <input name="price" value="|}
-        (string_of_int ingredient.Pizza.price)
+    <input type="hidden" name="is_vegan" value="false">
+  </div>
+  <div>
+    <label>Price</label>
+    <input name="price" value="|}
+        (Option.value
+           ~default:(string_of_int ingredient.Pizza.price)
+           price_value)
         {|">
+  </div>
+  <p class="alert">|}
+        [ Html.txt (Option.value ~default:"" price_error) ]
+        {|</p>
   <input type="submit" value="Update">
 </form>
 |}]

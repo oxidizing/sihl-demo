@@ -35,6 +35,8 @@ let[@warning "-45"] ingredient_schema
             ~validator:(fun name ->
               if String.length name > 12
               then Some "The name is too long, it has to be less than 12"
+              else if String.equal "" name
+              then Some "The name can not be empty"
               else None)
             "name"
         ; bool "is_vegan"

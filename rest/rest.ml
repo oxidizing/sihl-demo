@@ -62,6 +62,56 @@ module type CONTROLLER = sig
   val delete' : string -> Rock.Request.t -> Rock.Response.t Lwt.t
 end
 
+module Form = struct
+  type t = (string * string option * string option) list
+  [@@deriving yojson, show]
+
+  let set
+      ?(key = "_form")
+      (t : Conformist.error list)
+      (urlencoded : (string * string list) list)
+      resp
+    =
+    let t =
+      List.map
+        ~f:(fun (k, v) ->
+          t
+          |> List.find_opt ~f:(fun (field, _, _) -> String.equal field k)
+          |> Option.map (fun (field, input, value) -> field, input, Some value)
+          |> Option.value ~default:(k, CCList.head_opt v, None))
+        urlencoded
+    in
+    let json = t |> to_yojson |> Yojson.Safe.to_string in
+    Sihl.Web.Flash.set [ key, json ] resp
+  ;;
+
+  let find_form ?(key = "_form") req =
+    match Sihl.Web.Flash.find key req with
+    | None -> []
+    | Some json ->
+      let yojson =
+        try Some (Yojson.Safe.from_string json) with
+        | _ -> None
+      in
+      (match yojson with
+      | Some yojson ->
+        (match of_yojson yojson with
+        | Error _ -> []
+        | Ok form -> form)
+      | None -> [])
+  ;;
+
+  let find ?key (k : string) (req : Opium.Request.t)
+      : string option * string option
+    =
+    let form = find_form ?key req in
+    form
+    |> List.find_opt ~f:(fun (k', _, _) -> String.equal k k')
+    |> Option.map (fun (_, value, error) -> value, error)
+    |> Option.value ~default:(None, None)
+  ;;
+end
+
 module MakeController (Service : SERVICE) (View : VIEW with type t = Service.t) =
 struct
   exception Exception of string
@@ -111,13 +161,14 @@ struct
              (Format.sprintf "Successfully added %s" (singularize name))
         |> Lwt.return
       | Error msg ->
-        Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
+        Sihl.Web.Response.redirect_to (Format.sprintf "/%s/new" name)
+        |> Form.set [] urlencoded
         |> Sihl.Web.Flash.set_alert msg
         |> Lwt.return)
     | Error errors ->
-      Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
-      |> Sihl.Web.Flash.set_alert "Some of the input provided is invalid"
-      |> Sihl.Web.Flash.set errors
+      Sihl.Web.Response.redirect_to (Format.sprintf "/%s/new" name)
+      |> Sihl.Web.Flash.set_alert "Some of the input is invalid"
+      |> Form.set errors urlencoded
       |> Lwt.return
   ;;
 
@@ -175,18 +226,19 @@ struct
       let* updated = Service.update id thing in
       (match updated with
       | Ok _ ->
-        Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
+        Sihl.Web.Response.redirect_to (Format.sprintf "/%s/%s" name id)
         |> Sihl.Web.Flash.set_notice
              (Format.sprintf "Successfully updated %s" (singularize name))
         |> Lwt.return
       | Error msg ->
-        Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
+        Sihl.Web.Response.redirect_to (Format.sprintf "/%s/%s/edit" name id)
         |> Sihl.Web.Flash.set_alert msg
+        |> Form.set [] urlencoded
         |> Lwt.return)
     | Error errors ->
       Sihl.Web.Response.redirect_to (Format.sprintf "/%s/%s/edit" name id)
-      |> Sihl.Web.Flash.set_alert "Some of the input provided is invalid"
-      |> Sihl.Web.Flash.set errors
+      |> Sihl.Web.Flash.set_alert "Some of the input is invalid"
+      |> Form.set errors urlencoded
       |> Lwt.return
   ;;
 
@@ -209,12 +261,15 @@ struct
       | Ok () ->
         Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
         |> Sihl.Web.Flash.set_notice
-             (Format.sprintf "Successfully updated %s" (singularize name))
+             (Format.sprintf
+                "Successfully deleted %s '%s'"
+                (singularize name)
+                id)
         |> Lwt.return
       | Error msg ->
         Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
         |> Sihl.Web.Flash.set_notice
-             (Format.sprintf "Failed to remove %s: '%s'" (singularize name) msg)
+             (Format.sprintf "Failed to delete %s: '%s'" (singularize name) msg)
         |> Lwt.return)
   ;;
 end
@@ -243,8 +298,7 @@ let router_of_action
   | `New -> Sihl.Web.get (Format.sprintf "/%s/new" name) (Controller.new' name)
   | `Edit ->
     Sihl.Web.get (Format.sprintf "/%s/:id/edit" name) (Controller.edit name)
-  | `Show ->
-    Sihl.Web.post (Format.sprintf "/%s" name) (Controller.create name schema)
+  | `Show -> Sihl.Web.get (Format.sprintf "/%s/:id" name) (Controller.show name)
   | `Update ->
     Sihl.Web.put (Format.sprintf "/%s/:id" name) (Controller.update name schema)
   | `Destroy ->
@@ -269,7 +323,7 @@ let routers_of_actions
       create_routers rest routers
     | [] -> routers
   in
-  create_routers actions []
+  List.rev (create_routers actions [])
 ;;
 
 let resource

@@ -20,14 +20,20 @@ module Ingredient = struct
 
   let insert (ingredient : ingredient) =
     let open Lwt.Syntax in
-    let* () = Repo.insert_ingredient ingredient in
-    let* inserted = Repo.find_ingredient ingredient.name in
-    match inserted with
-    | Some ingredient -> Lwt.return (Ok ingredient)
+    let* found = find ingredient.name in
+    match found with
     | None ->
-      Logs.err (fun m ->
-          m "Failed to insert ingredient '%a'" pp_ingredient ingredient);
-      Lwt.return @@ Error "Failed to insert ingredient"
+      let* () = Repo.insert_ingredient ingredient in
+      let* inserted = Repo.find_ingredient ingredient.name in
+      (match inserted with
+      | Some ingredient -> Lwt.return (Ok ingredient)
+      | None ->
+        Logs.err (fun m ->
+            m "Failed to insert ingredient '%a'" pp_ingredient ingredient);
+        Lwt.return @@ Error "Failed to insert ingredient")
+    | Some _ ->
+      Lwt.return
+      @@ Error (Format.sprintf "Ingredient '%s' already exists" ingredient.name)
   ;;
 
   let create name is_vegan price : (ingredient, string) Result.t Lwt.t =
