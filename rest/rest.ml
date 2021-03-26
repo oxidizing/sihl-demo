@@ -4,64 +4,6 @@ let singularize str =
 
 let capitalize = CCString.capitalize_ascii
 
-module type SERVICE = sig
-  type t
-
-  val find : string -> t option Lwt.t
-  val query : unit -> t list Lwt.t
-  val insert : t -> (t, string) Result.t Lwt.t
-  val create : string -> bool -> int -> (t, string) result Lwt.t
-  val update : string -> t -> (t, string) result Lwt.t
-  val delete : t -> (unit, string) result Lwt.t
-end
-
-module type VIEW = sig
-  type t
-
-  val index
-    :  Rock.Request.t
-    -> string
-    -> t list
-    -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
-
-  val new'
-    :  Rock.Request.t
-    -> string
-    -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
-
-  val show : Rock.Request.t -> t -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
-
-  val edit
-    :  Rock.Request.t
-    -> string
-    -> t
-    -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
-end
-
-module type CONTROLLER = sig
-  type t
-
-  val index : string -> Rock.Request.t -> Rock.Response.t Lwt.t
-  val new' : string -> Rock.Request.t -> Rock.Response.t Lwt.t
-
-  val create
-    :  string
-    -> ('a, 'b, t) Conformist.t
-    -> Rock.Request.t
-    -> Rock.Response.t Lwt.t
-
-  val show : string -> Rock.Request.t -> Rock.Response.t Lwt.t
-  val edit : string -> Rock.Request.t -> Rock.Response.t Lwt.t
-
-  val update
-    :  string
-    -> ('a, 'b, t) Conformist.t
-    -> Rock.Request.t
-    -> Rock.Response.t Lwt.t
-
-  val delete' : string -> Rock.Request.t -> Rock.Response.t Lwt.t
-end
-
 module Form = struct
   type t = (string * string option * string option) list
   [@@deriving yojson, show]
@@ -101,15 +43,72 @@ module Form = struct
       | None -> [])
   ;;
 
-  let find ?key (k : string) (req : Opium.Request.t)
-      : string option * string option
-    =
-    let form = find_form ?key req in
+  let find (k : string) (form : t) : string option * string option =
     form
     |> List.find_opt ~f:(fun (k', _, _) -> String.equal k k')
     |> Option.map (fun (_, value, error) -> value, error)
     |> Option.value ~default:(None, None)
   ;;
+end
+
+module type SERVICE = sig
+  type t
+
+  val find : string -> t option Lwt.t
+  val query : unit -> t list Lwt.t
+  val insert : t -> (t, string) Result.t Lwt.t
+  val create : string -> bool -> int -> (t, string) result Lwt.t
+  val update : string -> t -> (t, string) result Lwt.t
+  val delete : t -> (unit, string) result Lwt.t
+end
+
+module type VIEW = sig
+  type t
+
+  val index
+    :  Rock.Request.t
+    -> string
+    -> t list
+    -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
+
+  val new'
+    :  Rock.Request.t
+    -> string
+    -> Form.t
+    -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
+
+  val show : Rock.Request.t -> t -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
+
+  val edit
+    :  Rock.Request.t
+    -> string
+    -> Form.t
+    -> t
+    -> [> Html_types.html ] Tyxml.Html.elt Lwt.t
+end
+
+module type CONTROLLER = sig
+  type t
+
+  val index : string -> Rock.Request.t -> Rock.Response.t Lwt.t
+  val new' : ?key:string -> string -> Rock.Request.t -> Rock.Response.t Lwt.t
+
+  val create
+    :  string
+    -> ('a, 'b, t) Conformist.t
+    -> Rock.Request.t
+    -> Rock.Response.t Lwt.t
+
+  val show : string -> Rock.Request.t -> Rock.Response.t Lwt.t
+  val edit : ?key:string -> string -> Rock.Request.t -> Rock.Response.t Lwt.t
+
+  val update
+    :  string
+    -> ('a, 'b, t) Conformist.t
+    -> Rock.Request.t
+    -> Rock.Response.t Lwt.t
+
+  val delete' : string -> Rock.Request.t -> Rock.Response.t Lwt.t
 end
 
 module MakeController (Service : SERVICE) (View : VIEW with type t = Service.t) =
@@ -133,7 +132,7 @@ struct
     Lwt.return @@ Sihl.Web.Response.of_html html
   ;;
 
-  let new' name req =
+  let new' ?key name req =
     let open Lwt.Syntax in
     let csrf =
       match Sihl.Web.Csrf.find req with
@@ -143,7 +142,8 @@ struct
         raise @@ Exception "CSRF middleware not installed"
       | Some token -> token
     in
-    let* html = View.new' req csrf in
+    let form = Form.find_form ?key req in
+    let* html = View.new' req csrf form in
     Lwt.return @@ Sihl.Web.Response.of_html html
   ;;
 
@@ -190,7 +190,7 @@ struct
       |> Lwt.return
   ;;
 
-  let edit name req =
+  let edit ?key name req =
     let open Lwt.Syntax in
     let id = Sihl.Web.Router.param req "id" in
     let* thing = Service.find id in
@@ -204,7 +204,8 @@ struct
           raise @@ Exception "CSRF middleware not installed"
         | Some token -> token
       in
-      let* html = View.edit req csrf thing in
+      let form = Form.find_form ?key req in
+      let* html = View.edit req csrf form thing in
       Lwt.return @@ Sihl.Web.Response.of_html html
     | None ->
       Sihl.Web.Response.redirect_to (Format.sprintf "/%s" name)
