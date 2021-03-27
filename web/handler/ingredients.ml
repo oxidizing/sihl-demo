@@ -16,7 +16,7 @@ let create req =
   match name with
   | None ->
     Sihl.Web.Response.redirect_to "/ingredients"
-    |> Sihl.Web.Flash.set_alert (Some "Invalid input provided")
+    |> Sihl.Web.Flash.set_alert "Invalid input provided"
     |> Lwt.return
   | Some name ->
     let* ingredient = Pizza.create_ingredient name in
@@ -24,11 +24,11 @@ let create req =
     | Ok ingredient ->
       Sihl.Web.Response.redirect_to "/ingredients"
       |> Sihl.Web.Flash.set_notice
-           (Some (Format.sprintf "Ingredient '%s' added" ingredient.Pizza.name))
+           (Format.sprintf "Ingredient '%s' added" ingredient.Pizza.name)
       |> Lwt.return
     | Error msg ->
       Sihl.Web.Response.redirect_to "/ingredients"
-      |> Sihl.Web.Flash.set_alert (Some msg)
+      |> Sihl.Web.Flash.set_alert msg
       |> Lwt.return)
 ;;
 
@@ -40,12 +40,12 @@ let delete req =
   | None ->
     Sihl.Web.Response.redirect_to "/ingredients"
     |> Sihl.Web.Flash.set_notice
-         (Some (Format.sprintf "Ingredient '%s' not found" name))
+         (Format.sprintf "Ingredient '%s' not found" name)
     |> Lwt.return
   | Some ingredient ->
     let* () = Pizza.delete_ingredient ingredient in
     Sihl.Web.Response.redirect_to "/ingredients"
     |> Sihl.Web.Flash.set_notice
-         (Some (Format.sprintf "Ingredient '%s' removed" ingredient.Pizza.name))
+         (Format.sprintf "Ingredient '%s' removed" ingredient.Pizza.name)
     |> Lwt.return
 ;;

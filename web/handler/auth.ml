@@ -22,11 +22,11 @@ let login_create req =
       |> Lwt.return
     | Error _ ->
       Sihl.Web.Response.redirect_to "/login"
-      |> Sihl.Web.Flash.set_alert (Some "Invalid email or password provided")
+      |> Sihl.Web.Flash.set_alert "Invalid email or password provided"
       |> Lwt.return)
   | _ ->
     Sihl.Web.Response.redirect_to "/login"
-    |> Sihl.Web.Flash.set_alert (Some "Invalid input provided")
+    |> Sihl.Web.Flash.set_alert "Invalid input provided"
     |> Lwt.return
 ;;
 
@@ -64,10 +64,10 @@ let registration_create req =
       |> Lwt.return
     | Error _ ->
       Sihl.Web.Response.redirect_to "/registration"
-      |> Sihl.Web.Flash.set_alert (Some "Invalid email or password provided")
+      |> Sihl.Web.Flash.set_alert "Invalid email or password provided"
       |> Lwt.return)
   | _ ->
     Sihl.Web.Response.redirect_to "/registration"
-    |> Sihl.Web.Flash.set_alert (Some "Invalid input provided")
+    |> Sihl.Web.Flash.set_alert "Invalid input provided"
     |> Lwt.return
 ;;

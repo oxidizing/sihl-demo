@@ -8,13 +8,12 @@ let services =
   ; Service.Migration.(register ~migrations:Database.Migration.all ())
   ; Sihl.Web.Http.register
       ~middlewares:Routes.Global.middlewares
-      ~routers:
-        [ Routes.Api.router
-        ; Routes.Site.router_public
-        ; Routes.Site.router_private
-        ; Routes.Site.router_admin_queue
-        ]
-      ()
+      (Sihl.Web.choose
+         [ Routes.Api.router
+         ; Routes.Site.router_public
+         ; Routes.Site.router_private
+         ; Routes.Site.router_admin_queue
+         ])
   ; Service.User.register ()
   ; Service.Queue.register
       ~jobs:
