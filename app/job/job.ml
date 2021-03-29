@@ -10,9 +10,7 @@ let cook_pizza =
 let order_ingredient =
   Sihl_queue.create_job
     (fun ingredient_name ->
-      Pizza.create_ingredient ingredient_name
-      |> Lwt.map ignore
-      |> Lwt.map Result.ok)
+      Pizza.Ingredient.create ingredient_name false 10 |> Lwt_result.map ignore)
     (fun s -> s)
     (fun s -> Ok s)
     "order-ingredient"

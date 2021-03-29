@@ -173,7 +173,8 @@ let edit req csrf (form : Rest.Form.t) (ingredient : Pizza.ingredient) =
   let vegan, _ = Rest.Form.find "is_vegan" form in
   let price_value, price_error = Rest.Form.find "price" form in
   let checkbox =
-    if Option.equal String.equal vegan (Some "true")
+    if ingredient.Pizza.is_vegan
+       || Option.equal String.equal vegan (Some "true")
     then
       [%html {|<input type="checkbox" name="is_vegan" value="true" checked>|}]
     else [%html {|<input type="checkbox" name="is_vegan" value="true">|}]

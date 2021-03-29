@@ -46,4 +46,3 @@ let site_private_ =
 ;;
 
 let api = Sihl.Web.choose ~scope:"/api" []
-let router = Sihl.Web.choose [ site_public; site_private_; api ]
