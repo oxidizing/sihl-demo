@@ -33,7 +33,7 @@ depends: [
   "conf-pkg-config" {= "2"}
   "conf-postgresql" {= "1"}
   "conf-zlib" {= "1"}
-  "conformist" {= "0.2.0"}
+  "conformist" {= "0.4.0"}
   "containers" {= "3.2"}
   "cppo" {= "1.6.7"}
   "cryptokit" {= "1.16.1"}
@@ -103,9 +103,9 @@ depends: [
   "seq" {= "base"}
   "sexplib" {= "v0.14.0"}
   "sexplib0" {= "v0.14.0"}
-  "sihl" {= "0.3.0"}
-  "sihl-queue" {= "0.3.0"}
-  "sihl-user" {= "0.3.0"}
+  "sihl" {= "0.4.0"}
+  "sihl-queue" {= "0.4.0"}
+  "sihl-user" {= "0.4.0"}
   "ssl" {= "0.5.10"}
   "stdlib-shims" {= "0.3.0"}
   "stringext" {= "1.6.0"}
@@ -140,17 +140,3 @@ build: [
 dev-repo: "git+https://github.com/oxidizing/pizza.git"
 name: "pizza"
 version: "dev"
-pin-depends: [
-  [
-    "sihl-user.0.3.0"
-    "git+ssh://git@github.com/oxidizing/sihl.git#bugfix/improve-sihl-queue"
-  ]
-  [
-    "sihl-queue.0.3.0"
-    "git+ssh://git@github.com/oxidizing/sihl.git#bugfix/improve-sihl-queue"
-  ]
-  [
-    "sihl.0.3.0"
-    "git+ssh://git@github.com/oxidizing/sihl.git#bugfix/improve-sihl-queue"
-  ]
-]
