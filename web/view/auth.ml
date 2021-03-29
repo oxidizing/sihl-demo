@@ -3,7 +3,7 @@ open Tyxml
 let%html login_form csrf =
   {|
 <form action="/login" method="Post">
-  <input type="hidden" name="csrf" value="|}
+  <input type="hidden" name="_csrf" value="|}
     csrf
     {|">
   <input name="email">
@@ -23,7 +23,7 @@ let login ~alert csrf =
 let%html registration_form csrf =
   {|
 <form action="/registration" method="Post">
-  <input type="hidden" name="csrf" value="|}
+  <input type="hidden" name="_csrf" value="|}
     csrf
     {|">
   <input name="email">

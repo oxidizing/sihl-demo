@@ -1,0 +1,3 @@
+(library
+ (name job)
+ (libraries sihl service pizza sihl-queue))

@@ -1,4 +1,5 @@
 let index req =
-  let user = Sihl.Web.User.find_opt req in
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req in
   Lwt.return @@ Sihl.Web.Response.of_html (View.Welcome.page user)
 ;;

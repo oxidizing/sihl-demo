@@ -20,6 +20,7 @@ let navigation user =
         {|</li>
   <li><a href="/ingredients">Ingredients</a></li>
   <li><a href="/pizzas">Pizzas</a></li>
+  <li><a href="/admin/queue">Queue Dashboard</a></li>
   <li><a href="/logout">Logout</a></li>
 </ul>|}]
 ;;
