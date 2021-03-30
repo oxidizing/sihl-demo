@@ -13,3 +13,5 @@ let ctor_type (schema : Gen_core.schema) =
   |> String.concat ~sep:" "
   |> Format.sprintf "%s -> t"
 ;;
+
+let file _ _ = Gen_core.{ name = "model.ml"; template = ""; params = [] }

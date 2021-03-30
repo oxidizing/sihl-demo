@@ -28,7 +28,7 @@ let insert ({{name}} : t) =
     | Some {{name} -> Lwt.return (Ok {{name}})
     | None ->
       Logs.err (fun m ->
-          m "Failed to insert {{name}} '%a'" pp {{name});
+          m "Failed to insert {{name}} '%a'" pp {{name}});
       Lwt.return @@ Error "Failed to insert {{name}}")
   | Some _ ->
     Lwt.return
@@ -96,13 +96,17 @@ let generate (name : string) (schema : Gen_core.schema) : unit =
     ; "ctor_type", Gen_model.ctor_type schema
     ]
   in
+  let service_file =
+    Gen_core.
+      { name = ml_filename; template = ml_template; params = ml_parameters }
+  in
+  let service_interface_file =
+    Gen_core.
+      { name = mli_filename; template = mli_template; params = mli_parameters }
+  in
+  let model_file = Gen_model.file name schema in
+  let repo_file = Gen_repo.file name schema in
   Gen_core.write_in_context
     name
-    Gen_core.
-      [ { name = ml_filename; template = ml_template; params = ml_parameters }
-      ; { name = mli_filename
-        ; template = mli_template
-        ; params = mli_parameters
-        }
-      ]
+    [ service_file; service_interface_file; model_file; repo_file ]
 ;;
