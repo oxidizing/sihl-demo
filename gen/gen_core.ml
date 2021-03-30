@@ -19,10 +19,10 @@ let gen_type_of_string (s : string) : (gen_type, string) result =
   match s with
   | "float" -> Ok Float
   | "Int" -> Ok Int
-  | "Bool" -> Ok Bool
-  | "String" -> Ok String
-  | "Date" -> Ok Date
-  | "Time" -> Ok Time
+  | "bool" -> Ok Bool
+  | "string" -> Ok String
+  | "date" -> Ok Date
+  | "time" -> Ok Time
   | s -> Error (Format.sprintf "Invalid type '%s' provided" s)
 ;;
 
@@ -51,7 +51,13 @@ let schema_of_string (s : string list) : (schema, string) result =
        ~init:(Result.ok [])
 ;;
 
-let render template params =
+type file =
+  { name : string
+  ; template : string
+  ; params : (string * string) list
+  }
+
+let render { template; params; _ } =
   List.fold_left
     ~f:(fun res (name, value) ->
       CCString.replace
@@ -63,12 +69,27 @@ let render template params =
     params
 ;;
 
-let write_file (template : string) (params : (string * string) list) path : unit
-  =
-  let content = render template params in
+let write_file (file : file) (path : string) : unit =
+  let content = render file in
+  let filepath = Format.sprintf "%s/%s" path file.name in
   try
-    CCIO.File.write_exn content path;
-    print_endline (Format.sprintf "Wrote file '%s'" path)
+    Bos.OS.File.write (Fpath.of_string filepath |> Result.get_ok) content
+    |> Result.get_ok;
+    print_endline (Format.sprintf "Wrote file '%s'" filepath)
   with
-  | _ -> print_endline (Format.sprintf "Failed to write file '%s'" path)
+  | _ ->
+    let msg = Format.sprintf "Failed to write file '%s'" filepath in
+    print_endline msg;
+    failwith msg
+;;
+
+let write_in_context (context : string) (files : file list) : unit =
+  let root = Sihl.Configuration.root_path () |> Option.get in
+  let context_path = Format.sprintf "%s/app/context/%s" root context in
+  match Bos.OS.Dir.exists (Fpath.of_string context_path |> Result.get_ok) with
+  | Ok true ->
+    failwith (Format.sprintf "Context '%s' exists already" context_path)
+  | Ok false | Error _ ->
+    Bos.OS.Dir.create (Fpath.of_string context_path |> Result.get_ok) |> ignore;
+    List.iter ~f:(fun file -> write_file file context_path) files
 ;;

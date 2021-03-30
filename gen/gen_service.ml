@@ -88,16 +88,21 @@ let generate (name : string) (schema : Gen_core.schema) : unit =
   let create_args =
     schema |> List.map ~f:(fun (name, _) -> name) |> String.concat ~sep:" "
   in
-  let ml_path = Format.sprintf "app/context/%s/%s.ml" name name in
-  Gen_core.write_file
-    ml_template
-    [ "name", name; "create_args", create_args ]
-    ml_path;
-  let mli_path = Format.sprintf "app/context/%s/%s.mli" name name in
-  Gen_core.write_file
-    mli_template
+  let ml_filename = Format.sprintf "%s.ml" name in
+  let ml_parameters = [ "name", name; "create_args", create_args ] in
+  let mli_filename = Format.sprintf "%s.mli" name in
+  let mli_parameters =
     [ "model_type", Gen_model.model_type schema
     ; "ctor_type", Gen_model.ctor_type schema
     ]
-    mli_path
+  in
+  Gen_core.write_in_context
+    name
+    Gen_core.
+      [ { name = ml_filename; template = ml_template; params = ml_parameters }
+      ; { name = mli_filename
+        ; template = mli_template
+        ; params = mli_parameters
+        }
+      ]
 ;;

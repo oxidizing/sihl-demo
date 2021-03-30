@@ -9,7 +9,9 @@ let service =
         | Ok schema ->
           Gen_service.generate service_name schema;
           Lwt.return @@ Some ()
-        | Error msg -> raise @@ Sihl.Command.Exception msg)
+        | Error msg ->
+          print_endline msg;
+          raise @@ Sihl.Command.Exception "")
       | _ -> Lwt.return @@ None)
 ;;
 
