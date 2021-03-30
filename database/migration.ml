@@ -7,8 +7,8 @@ let create_pizzas_table =
      CREATE TABLE IF NOT EXISTS pizzas (
        id serial,
        name VARCHAR(128) NOT NULL,
-       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
      PRIMARY KEY (id),
      UNIQUE (name)
      );
@@ -22,8 +22,8 @@ let create_ingredients_table =
      CREATE TABLE IF NOT EXISTS ingredients (
        id serial,
        name VARCHAR(128) NOT NULL,
-       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
      PRIMARY KEY (id),
      UNIQUE (name)
      );
@@ -37,8 +37,8 @@ let create_pizzas_ingredients_table =
      CREATE TABLE IF NOT EXISTS pizzas_ingredients (
        pizza_id INTEGER NOT NULL,
        ingredient_id INTEGER NOT NULL,
-       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
      UNIQUE (pizza_id, ingredient_id),
      CONSTRAINT fk_pizza
        FOREIGN KEY (pizza_id) REFERENCES pizzas (id)

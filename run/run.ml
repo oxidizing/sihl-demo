@@ -26,5 +26,8 @@ let () =
            [ Command.create_pizza
            ; Command.cook_pizza
            ; Command.order_ingredient
+           ; Gen.service
+           ; Gen.html
+           ; Gen.json
            ])
 ;;
