@@ -49,12 +49,45 @@ let create_pizzas_ingredients_table =
      |sql}
 ;;
 
+let remove_timezone_pizzas_table =
+  Sihl.Database.Migration.create_step
+    ~label:"remove timezone information from pizzas"
+    {sql|
+      ALTER TABLE pizzas
+        ALTER COLUMN created_at TYPE TIMESTAMP,
+        ALTER COLUMN updated_at TYPE TIMESTAMP;
+    |sql}
+;;
+
+let remove_timezone_ingredients_table =
+  Sihl.Database.Migration.create_step
+    ~label:"remove timezone information from ingredients"
+    {sql|
+      ALTER TABLE ingredients
+        ALTER COLUMN created_at TYPE TIMESTAMP,
+        ALTER COLUMN updated_at TYPE TIMESTAMP;
+    |sql}
+;;
+
+let remove_timezone_pizzas_ingredients_table =
+  Sihl.Database.Migration.create_step
+    ~label:"remove timezone information from pizzas_ingredients"
+    {sql|
+      ALTER TABLE pizzas_ingredients
+        ALTER COLUMN created_at TYPE TIMESTAMP,
+        ALTER COLUMN updated_at TYPE TIMESTAMP;
+    |sql}
+;;
+
 let pizzas =
   Sihl.Database.Migration.(
     empty "pizzas"
     |> add_step create_pizzas_table
     |> add_step create_ingredients_table
-    |> add_step create_pizzas_ingredients_table)
+    |> add_step create_pizzas_ingredients_table
+    |> add_step remove_timezone_pizzas_table
+    |> add_step remove_timezone_ingredients_table
+    |> add_step remove_timezone_pizzas_ingredients_table)
 ;;
 
 let all = [ pizzas ]
