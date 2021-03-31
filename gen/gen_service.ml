@@ -112,6 +112,7 @@ let generate (name : string) (schema : Gen_core.schema) : unit =
   in
   let model_file = Gen_model.file schema in
   let repo_file = Gen_repo.file name schema in
+  (* TODO [jerben] write dune file *)
   Gen_core.write_in_context
     name
     [ service_file; service_interface_file; model_file; repo_file ]

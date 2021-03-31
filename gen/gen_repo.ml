@@ -5,7 +5,6 @@ let clean_request =
 ;;
 
 let clean () =
-  let open Lwt_result.Syntax in
   Sihl.Database.query' (fun (module Connection : Caqti_lwt.CONNECTION) ->
       Connection.exec clean_request ())
 ;;
@@ -14,17 +13,17 @@ let insert_request =
   Caqti_request.exec
     {{caqti_type}}
     {sql|
-        INSERT INTO {{table_name}} (
-          uuid,
-          {{fields}},
-          created_at,
-          updated_at
-        ) VALUES (
-          $?,
-          {{parameters}},
-          $?,
-          $?
-        )
+INSERT INTO {{table_name}} (
+  uuid,
+  {{fields}},
+  created_at,
+  updated_at
+) VALUES (
+  ?,
+  {{parameters}},
+  ?,
+  ?
+)
         |sql}
 ;;
 
@@ -40,11 +39,11 @@ let update_request =
   Caqti_request.exec
     {{caqti_type}}
     {sql|
-        UPDATE {{table_name}} SET
-          {{update_fields}},
-          created_at = $4,
-          updated_at = $5
-        WHERE uuid = $1;
+UPDATE {{table_name}} SET
+  {{update_fields}},
+  created_at = $4,
+  updated_at = $5
+WHERE uuid = $1;
         |sql}
 ;;
 
@@ -61,13 +60,13 @@ let find_request =
     Caqti_type.string
     {{caqti_type}}
     {sql|
-        SELECT
-          uuid,
-          {{fields}},
-          created_at,
-          updated_at
-        FROM {{table_name}}
-        WHERE name = ?
+SELECT
+  uuid,
+  {{fields}},
+  created_at,
+  updated_at
+FROM {{table_name}}
+WHERE name = ?
         |sql}
 ;;
 
@@ -90,13 +89,13 @@ let find_all_request =
     Caqti_type.unit
     {{caqti_type}}
     {sql|
-        SELECT
-          uuid,
-          {{fields}},
-          created_at,
-          updated_at
-        FROM {{table_name}}
-        ORDER BY id DESC
+SELECT
+  uuid,
+  {{fields}},
+  created_at,
+  updated_at
+FROM {{table_name}}
+ORDER BY id DESC
         |sql}
 ;;
 
@@ -118,8 +117,8 @@ let delete_request =
   Caqti_request.exec
     Caqti_type.string
     {sql|
-        DELETE FROM {{table_name}}
-        WHERE name = ?
+DELETE FROM {{table_name}}
+WHERE name = ?
         |sql}
 ;;
 
@@ -148,7 +147,6 @@ let caqti_type (schema : Gen_core.schema) =
 ;;
 
 let caqti_value name (schema : Gen_core.schema) =
-  (* TODO [jerben] add id, created_at and updated_at *)
   let rec loop = function
     | [ el1; el2 ] ->
       let el1 = Format.sprintf "%s.Model.%s" name el1 in
@@ -159,38 +157,46 @@ let caqti_value name (schema : Gen_core.schema) =
       Format.sprintf "(%s, %s)" el1 (loop rest)
     | [] -> failwith "Empty schema provided"
   in
-  schema |> List.map ~f:fst |> loop
+  let names =
+    List.concat
+      [ [ "id" ]; List.map ~f:fst schema; [ "created_at"; "updated_at" ] ]
+  in
+  loop names
 ;;
 
 let destructued_fields (schema : Gen_core.schema) =
-  (* TODO [jerben] add id, created_at and updated_at *)
   let rec loop = function
     | [ el1; el2 ] -> Format.sprintf "(%s, %s)" el1 el2
     | el1 :: rest -> Format.sprintf "(%s, %s)" el1 (loop rest)
     | [] -> failwith "Empty schema provided"
   in
-  schema |> List.map ~f:fst |> loop
+  let names =
+    List.concat
+      [ [ "id" ]; List.map ~f:fst schema; [ "created_at"; "updated_at" ] ]
+  in
+  loop names
 ;;
 
 let fields (schema : Gen_core.schema) =
-  schema |> List.map ~f:fst |> String.concat ~sep:", "
+  schema |> List.map ~f:fst |> String.concat ~sep:", \n  "
 ;;
 
 let update_fields (schema : Gen_core.schema) =
   schema
-  |> List.mapi ~f:(fun idx (name, _) -> name, idx)
-  |> List.map ~f:(fun (name, idx) -> Format.sprintf "%s = $%d" name idx)
-  |> String.concat ~sep:", "
+  |> List.mapi ~f:(fun idx (name, _) ->
+         (* We start with $2 because $1 is the id which is never updated. *)
+         Format.sprintf "%s = $%d" name (idx + 2))
+  |> String.concat ~sep:", \n  "
 ;;
 
 let parameters (schema : Gen_core.schema) =
-  schema |> List.map ~f:(fun _ -> "?") |> String.concat ~sep:", "
+  schema |> List.map ~f:(fun _ -> "?") |> String.concat ~sep:", \n  "
 ;;
 
 let file (name : string) (schema : Gen_core.schema) =
   let params =
     [ "name", name
-    ; "table_name", Format.sprintf "%s" name
+    ; "table_name", Format.sprintf "%ss" name
     ; "caqti_type", caqti_type schema
     ; "caqti_value", caqti_value name schema
     ; "destructured_fields", destructued_fields schema
