@@ -58,7 +58,10 @@ let created_value (schema : Gen_core.schema) =
 let conformist_fields (schema : Gen_core.schema) =
   schema
   |> List.map ~f:(fun (name, type_) ->
-         Format.sprintf {|%s "%s"|} (Gen_core.ocaml_type_of_gen_type type_) name)
+         Format.sprintf
+           {|%s "%s"|}
+           (Gen_core.conformist_type_of_gen_type type_)
+           name)
   |> String.concat ~sep:"; "
 ;;
 

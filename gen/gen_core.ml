@@ -15,6 +15,15 @@ let ocaml_type_of_gen_type = function
   | Time -> "Ptime.t"
 ;;
 
+let conformist_type_of_gen_type = function
+  | Float -> "float"
+  | Int -> "int"
+  | Bool -> "bool"
+  | String -> "string"
+  | Date -> "time"
+  | Time -> "date"
+;;
+
 let gen_type_of_string (s : string) : (gen_type, string) result =
   match s with
   | "float" -> Ok Float
