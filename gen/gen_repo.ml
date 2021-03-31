@@ -16,12 +16,12 @@ let insert_request =
     {sql|
         INSERT INTO {{table_name}} (
           uuid,
-          {{fields}}
+          {{fields}},
           created_at,
           updated_at
         ) VALUES (
           $?,
-          {{parameters}}
+          {{parameters}},
           $?,
           $?
         )
@@ -41,7 +41,7 @@ let update_request =
     {{caqti_type}}
     {sql|
         UPDATE {{table_name}} SET
-          {{update_fields}}
+          {{update_fields}},
           created_at = $4,
           updated_at = $5
         WHERE uuid = $1;
@@ -63,7 +63,7 @@ let find_request =
     {sql|
         SELECT
           uuid,
-          {{fields}}
+          {{fields}},
           created_at,
           updated_at
         FROM {{table_name}}
@@ -92,7 +92,7 @@ let find_all_request =
     {sql|
         SELECT
           uuid,
-          {{fields}}
+          {{fields}},
           created_at,
           updated_at
         FROM {{table_name}}
@@ -132,32 +132,67 @@ let delete ({{name}} : Model.t) : unit Lwt.t =
 ;;
 
 let caqti_type (schema : Gen_core.schema) =
-  "Caqti_type.(tup2 string (tup2 bool (tup2 int (tup2 ptime ptime))))"
+  (* TODO [jerben] add id, created_at and updated_at *)
+  let rec loop = function
+    | [ el1; el2 ] ->
+      let el1 = Gen_core.caqti_type_of_gen_type el1 in
+      let el2 = Gen_core.caqti_type_of_gen_type el2 in
+      Format.sprintf "(tup2 %s %s)" el1 el2
+    | el1 :: rest ->
+      let el1 = Gen_core.caqti_type_of_gen_type el1 in
+      Format.sprintf "(tup2 %s %s)" el1 (loop rest)
+    | [] -> failwith "Empty schema provided"
+  in
+  let types = schema |> List.map ~f:snd |> loop in
+  Format.sprintf "Caqti_type.%s" types
 ;;
 
-let caqti_value (schema : Gen_core.schema) =
-  "(ingredient.Model.name, (ingredient.Model.is_vegan, \
-   (ingredient.Model.price, (ingredient.Model.created_at, \
-   ingredient.Model.updated_at))))"
+let caqti_value name (schema : Gen_core.schema) =
+  (* TODO [jerben] add id, created_at and updated_at *)
+  let rec loop = function
+    | [ el1; el2 ] ->
+      let el1 = Format.sprintf "%s.Model.%s" name el1 in
+      let el2 = Format.sprintf "%s.Model.%s" name el2 in
+      Format.sprintf "(%s, %s)" el1 el2
+    | el1 :: rest ->
+      let el1 = Format.sprintf "%s.Model.%s" name el1 in
+      Format.sprintf "(%s, %s)" el1 (loop rest)
+    | [] -> failwith "Empty schema provided"
+  in
+  schema |> List.map ~f:fst |> loop
 ;;
 
 let destructued_fields (schema : Gen_core.schema) =
-  "(id, (is_vegan, (price, (created_at, updated_at))))"
+  (* TODO [jerben] add id, created_at and updated_at *)
+  let rec loop = function
+    | [ el1; el2 ] -> Format.sprintf "(%s, %s)" el1 el2
+    | el1 :: rest -> Format.sprintf "(%s, %s)" el1 (loop rest)
+    | [] -> failwith "Empty schema provided"
+  in
+  schema |> List.map ~f:fst |> loop
 ;;
 
-let fields (schema : Gen_core.schema) = "name, is_vegan, price,"
+let fields (schema : Gen_core.schema) =
+  schema |> List.map ~f:fst |> String.concat ~sep:", "
+;;
 
 let update_fields (schema : Gen_core.schema) =
-  "name = $1, is_vegan = $2, price = $3,"
+  schema
+  |> List.mapi ~f:(fun idx (name, _) -> name, idx)
+  |> List.map ~f:(fun (name, idx) -> Format.sprintf "%s = $%d" name idx)
+  |> String.concat ~sep:", "
 ;;
 
-let parameters (schema : Gen_core.schema) = "?, ?, ?,"
+let parameters (schema : Gen_core.schema) =
+  schema |> List.map ~f:(fun _ -> "?") |> String.concat ~sep:", "
+;;
 
 let file (name : string) (schema : Gen_core.schema) =
   let params =
-    [ "table_name", Format.sprintf "%s" name
+    [ "name", name
+    ; "table_name", Format.sprintf "%s" name
     ; "caqti_type", caqti_type schema
-    ; "caqti_value", caqti_value schema
+    ; "caqti_value", caqti_value name schema
     ; "destructured_fields", destructued_fields schema
     ; "fields", fields schema
     ; "update_fields", update_fields schema

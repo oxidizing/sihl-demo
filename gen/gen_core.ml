@@ -15,6 +15,15 @@ let ocaml_type_of_gen_type = function
   | Time -> "Ptime.t"
 ;;
 
+let caqti_type_of_gen_type = function
+  | Float -> "float"
+  | Int -> "int"
+  | Bool -> "bool"
+  | String -> "string"
+  | Date -> "pdate"
+  | Time -> "ptime"
+;;
+
 let conformist_type_of_gen_type = function
   | Float -> "float"
   | Int -> "int"
