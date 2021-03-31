@@ -194,6 +194,7 @@ let file (name : string) (schema : Gen_core.schema) =
     ; "caqti_type", caqti_type schema
     ; "caqti_value", caqti_value name schema
     ; "destructured_fields", destructued_fields schema
+    ; "created_value", Gen_model.created_value schema
     ; "fields", fields schema
     ; "update_fields", update_fields schema
     ; "parameters", parameters schema
