@@ -54,7 +54,6 @@ let created_value (schema : Gen_core.schema) =
   |> String.concat ~sep:" "
 ;;
 
-(* string "name"; bool "is_vegan"; int "price" *)
 let conformist_fields (schema : Gen_core.schema) =
   schema
   |> List.map ~f:(fun (name, type_) ->
