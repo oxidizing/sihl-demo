@@ -25,7 +25,7 @@ let insert ({{name}} : t) =
     let* () = Repo.insert {{name}} in
     let* inserted = Repo.find {{name}}.name in
     (match inserted with
-    | Some {{name} -> Lwt.return (Ok {{name}})
+    | Some {{name}} -> Lwt.return (Ok {{name}})
     | None ->
       Logs.err (fun m ->
           m "Failed to insert {{name}} '%a'" pp {{name}});
@@ -62,7 +62,13 @@ let delete ({{name}} : t) =
 
 let mli_template =
   {|
-type t = {{model_type}}
+type t =
+  { id : string
+  {{model_type}}
+  ; created_at : Ptime.t
+  ; updated_at : Ptime.t
+  }
+[@@deriving show]
 
 val schema : (unit, {{ctor_type}}, t) Conformist.t
 

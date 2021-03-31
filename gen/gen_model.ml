@@ -1,12 +1,17 @@
 let template =
   {|
-type t = {{model_type}}
+type t =
+  { id : string
+  {{model_type}}
+  ; created_at : Ptime.t
+  ; updated_at : Ptime.t
+  }
 [@@deriving show]
 
 let create {{create_args}} =
   let now = Ptime_clock.now () in
-  let uuid = Uuidm.create `V4 |> Uuidm.to_string in
-  { uuid; {{created_value}} created_at = now; updated_at = now }
+  let id = Uuidm.create `V4 |> Uuidm.to_string in
+  { id; {{created_value}} created_at = now; updated_at = now }
 ;;
 
 let[@warning "-45"] schema
@@ -26,15 +31,15 @@ let model_type (schema : Gen_core.schema) =
   schema
   |> List.map ~f:(fun (name, type_) ->
          Format.sprintf "%s: %s" name (Gen_core.ocaml_type_of_gen_type type_))
-  |> String.concat ~sep:","
-  |> Format.sprintf "{%s}"
+  |> String.concat ~sep:";"
+  |> Format.sprintf ";%s"
 ;;
 
 let ctor_type (schema : Gen_core.schema) =
   schema
   |> List.map ~f:snd
   |> List.map ~f:Gen_core.ocaml_type_of_gen_type
-  |> String.concat ~sep:" "
+  |> String.concat ~sep:" -> "
   |> Format.sprintf "%s -> t"
 ;;
 

@@ -18,7 +18,7 @@ let ocaml_type_of_gen_type = function
 let gen_type_of_string (s : string) : (gen_type, string) result =
   match s with
   | "float" -> Ok Float
-  | "Int" -> Ok Int
+  | "int" -> Ok Int
   | "bool" -> Ok Bool
   | "string" -> Ok String
   | "date" -> Ok Date
