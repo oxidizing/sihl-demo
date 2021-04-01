@@ -147,6 +147,6 @@ let () =
   Logs.set_reporter (Sihl.Log.cli_reporter ());
   Lwt_main.run
     (let* _ = Sihl.Container.start_services services in
-     let* () = Service.Migration.execute Database.Migration.all in
+     let* () = Service.Migration.execute Database.Pizza.all in
      Alcotest_lwt.run "tests" suite)
 ;;
