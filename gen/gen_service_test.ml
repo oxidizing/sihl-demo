@@ -102,5 +102,5 @@ let test_file (name : string) (schema : Gen_core.schema) =
 
 let dune_file (name : string) =
   let params = [ "name", name ] in
-  Gen_core.{ name = "test.ml"; template; params }
+  Gen_core.{ name = "dune"; template = dune_file_template; params }
 ;;
