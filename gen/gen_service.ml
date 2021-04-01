@@ -125,5 +125,8 @@ let generate (name : string) (schema : Gen_core.schema) : unit =
   in
   Gen_core.write_in_context
     name
-    [ service_file; service_interface_file; model_file; repo_file; dune_file ]
+    [ service_file; service_interface_file; model_file; repo_file; dune_file ];
+  Gen_core.write_in_test
+    name
+    Gen_service_test.[ test_file name schema; dune_file name ]
 ;;

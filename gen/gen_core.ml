@@ -5,6 +5,14 @@ type gen_type =
   | String
   | Datetime
 
+let gen_type_to_example = function
+  | Float -> "0.3"
+  | Int -> "10"
+  | Bool -> "true"
+  | String -> {|"foobar"|}
+  | Datetime -> "(Ptime.of_float_s 0.0 |> Option.get)"
+;;
+
 let ocaml_type_of_gen_type = function
   | Float -> "float"
   | Int -> "int"
@@ -106,4 +114,14 @@ let write_in_context (context : string) (files : file list) : unit =
   | Ok false | Error _ ->
     Bos.OS.Dir.create (Fpath.of_string context_path |> Result.get_ok) |> ignore;
     List.iter ~f:(fun file -> write_file file context_path) files
+;;
+
+let write_in_test (name : string) (files : file list) : unit =
+  let root = Sihl.Configuration.root_path () |> Option.get in
+  let test_path = Format.sprintf "%s/test/%s" root name in
+  match Bos.OS.Dir.exists (Fpath.of_string test_path |> Result.get_ok) with
+  | Ok true -> failwith (Format.sprintf "Test '%s' exists already" test_path)
+  | Ok false | Error _ ->
+    Bos.OS.Dir.create (Fpath.of_string test_path |> Result.get_ok) |> ignore;
+    List.iter ~f:(fun file -> write_file file test_path) files
 ;;
