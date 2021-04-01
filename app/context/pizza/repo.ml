@@ -30,8 +30,8 @@ let insert_ingredient_request =
           updated_at
         ) VALUES (
           $1,
-          $2,
-          $3
+          $2 AT TIME ZONE 'UTC',
+          $3 AT TIME ZONE 'UTC'
         )
         |sql}
 ;;
@@ -225,8 +225,8 @@ let insert_pizza_request =
           updated_at
         ) VALUES (
           $1,
-          $2,
-          $3
+          $2 AT TIME ZONE 'UTC',
+          $3 AT TIME ZONE 'UTC'
         )
     |sql}
 ;;
