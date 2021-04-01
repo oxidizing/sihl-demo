@@ -2,48 +2,44 @@ let template =
   {|
 open Lwt.Syntax
 
+let testable_{{name}} =
+  Alcotest.testable {{module}}.pp (fun t1 t2 ->
+      String.equal t1.{{module}}.id t2.{{module}}.id)
+;;
+
 let create _ () =
   let* () = Sihl.Cleaner.clean_all () in
   let* () = {{module}}.clean () in
-  let* t1 = {{module}}.create {{create_values}} in
-  let* t2 = {{module}}.create "tomato" true 2 in
-  let* (t1 : {{module}}.t) =
-    {{module}}.find t1.{{module}}.id |> Lwt.map Option.get
+  let* created = {{module}}.create {{create_values}} |> Lwt.map Result.get_ok in
+  let* (found : {{module}}.t) =
+    {{module}}.find created.{{module}}.id |> Lwt.map Option.get
   in
-  let* (t2 : {{module}}.t) =
-    {{module}}.find t2.{{module}}.id |> Lwt.map Option.get
-  in
-  Alcotest.(check string "has ham" "ham" ham.Pizza.name);
-  Alcotest.(check string "has tomato" "tomato" tomato.Pizza.name);
+  Alcotest.(check testable_{{name}} "is same" found created);
   Lwt.return ()
 ;;
 
-let delete_ingredient _ () =
+let delete' _ () =
   let* () = Sihl.Cleaner.clean_all () in
-  let* () = Pizza.clean () in
-  let* _ = Pizza.Ingredient.create "ham" true 10 in
-  let* (ham : Pizza.ingredient) =
-    Pizza.Ingredient.find "ham" |> Lwt.map Option.get
+  let* () = {{module}}.clean () in
+  let* created = {{module}}.create {{create_values}} |> Lwt.map Result.get_ok in
+  let* (found : {{module}}.t) =
+    {{module}}.find created.{{module}}.id |> Lwt.map Option.get
   in
-  Alcotest.(check string "has ham" "ham" ham.Pizza.name);
-  let* _ = Pizza.Ingredient.delete ham in
-  let* ham = Pizza.Ingredient.find "ham" in
-  Alcotest.(check bool "has deleted ham" true (Option.is_none ham));
+  let* _ = {{module}}.delete found in
+  let* found =
+    {{module}}.find created.{{module}}.id
+  in
+  Alcotest.(check bool "was deleted" true (Option.is_none found));
   Lwt.return ()
 ;;
 
-let find_ingredients _ () =
+let find_all _ () =
   let* () = Sihl.Cleaner.clean_all () in
-  let* () = Pizza.clean () in
-  let* _ = Pizza.Ingredient.create "ham" true 4 in
-  let* _ = Pizza.Ingredient.create "tomato" true 2 in
-  let* (ingredients : string list) =
-    Pizza.Ingredient.query ()
-    |> Lwt.map
-         (List.map ~f:(fun (ingredient : Pizza.ingredient) ->
-              ingredient.Pizza.name))
-  in
-  Alcotest.(check (list string) "has pizza" [ "tomato"; "ham" ] ingredients);
+  let* () = {{module}}.clean () in
+  let* created1 = {{module}}.create {{create_values}} |> Lwt.map Result.get_ok in
+  let* created2 = {{module}}.create {{create_values}} |> Lwt.map Result.get_ok in
+  let* ({{name}}s : {{module}}.t list) = {{module}}.query () in
+  Alcotest.(check (list testable_{{name}}) "has {{name}}s" [created1; created2] {{name}}s);
   Lwt.return ()
 ;;
 
@@ -51,8 +47,8 @@ let suite =
   Alcotest_lwt.
     [ ( "crud {{name}}"
       , [ test_case "create" `Quick create
-        ; test_case "delete" `Quick delete
-        ; test_case "find" `Quick finds
+        ; test_case "delete" `Quick delete'
+        ; test_case "find_all" `Quick find_all
         ] )
     ]
 ;;
