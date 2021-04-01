@@ -15,7 +15,7 @@ let create {{create_args}} =
 ;;
 
 let[@warning "-45"] schema
-    : (unit, {{ctor_type}}, t) Conformist.t
+    : (unit, {{ctor_type}} -> t, t) Conformist.t
   =
   Conformist.(
     make
@@ -40,7 +40,6 @@ let ctor_type (schema : Gen_core.schema) =
   |> List.map ~f:snd
   |> List.map ~f:Gen_core.ocaml_type_of_gen_type
   |> String.concat ~sep:" -> "
-  |> Format.sprintf "%s -> t"
 ;;
 
 let create_args (schema : Gen_core.schema) =

@@ -131,7 +131,6 @@ let delete ({{name}} : Model.t) : unit Lwt.t =
 ;;
 
 let caqti_type (schema : Gen_core.schema) =
-  (* TODO [jerben] add id, created_at and updated_at *)
   let rec loop = function
     | [ el1; el2 ] ->
       let el1 = Gen_core.caqti_type_of_gen_type el1 in
@@ -142,8 +141,11 @@ let caqti_type (schema : Gen_core.schema) =
       Format.sprintf "(tup2 %s %s)" el1 (loop rest)
     | [] -> failwith "Empty schema provided"
   in
-  let types = schema |> List.map ~f:snd |> loop in
-  Format.sprintf "Caqti_type.%s" types
+  let types =
+    List.concat
+      Gen_core.[ [ String ]; List.map ~f:snd schema; [ Datetime; Datetime ] ]
+  in
+  Format.sprintf "Caqti_type.%s" (loop types)
 ;;
 
 let caqti_value name (schema : Gen_core.schema) =

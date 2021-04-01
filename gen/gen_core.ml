@@ -3,16 +3,14 @@ type gen_type =
   | Int
   | Bool
   | String
-  | Date
-  | Time
+  | Datetime
 
 let ocaml_type_of_gen_type = function
   | Float -> "float"
   | Int -> "int"
   | Bool -> "bool"
   | String -> "string"
-  | Date -> "Ptime.date"
-  | Time -> "Ptime.t"
+  | Datetime -> "Ptime.t"
 ;;
 
 let caqti_type_of_gen_type = function
@@ -20,8 +18,7 @@ let caqti_type_of_gen_type = function
   | Int -> "int"
   | Bool -> "bool"
   | String -> "string"
-  | Date -> "pdate"
-  | Time -> "ptime"
+  | Datetime -> "ptime"
 ;;
 
 let conformist_type_of_gen_type = function
@@ -29,8 +26,7 @@ let conformist_type_of_gen_type = function
   | Int -> "int"
   | Bool -> "bool"
   | String -> "string"
-  | Date -> "time"
-  | Time -> "date"
+  | Datetime -> "datetime"
 ;;
 
 let gen_type_of_string (s : string) : (gen_type, string) result =
@@ -39,8 +35,7 @@ let gen_type_of_string (s : string) : (gen_type, string) result =
   | "int" -> Ok Int
   | "bool" -> Ok Bool
   | "string" -> Ok String
-  | "date" -> Ok Date
-  | "time" -> Ok Time
+  | "datetime" -> Ok Datetime
   | s -> Error (Format.sprintf "Invalid type '%s' provided" s)
 ;;
 
@@ -67,6 +62,7 @@ let schema_of_string (s : string list) : (schema, string) result =
          | Error msg, _ -> Error msg
          | Ok _, Error msg -> Error msg)
        ~init:(Result.ok [])
+  |> Result.map List.rev
 ;;
 
 type file =

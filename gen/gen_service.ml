@@ -70,24 +70,28 @@ type t =
   }
 [@@deriving show]
 
-val schema : (unit, {{ctor_type}}, t) Conformist.t
+val schema : (unit, {{ctor_type}} -> t, t) Conformist.t
 
 exception Exception of string
 
 val clean : unit -> unit Lwt.t
 val find : string -> t option Lwt.t
 val query : unit -> t list Lwt.t
-val create : string -> bool -> int -> (t, string) result Lwt.t
+val create : {{ctor_type}} -> (t, string) result Lwt.t
 val insert : t -> (t, string) result Lwt.t
 val update : string -> t -> (t, string) result Lwt.t
 val delete : t -> (unit, string) result Lwt.t
 |}
 ;;
 
-let mli_params =
-  [ "model_type", "{ name : string }"
-  ; "ctor_type", "string -> bool -> int -> t"
-  ]
+let dune_file_template =
+  {|
+(library
+ (name {{name}})
+ (libraries sihl service)
+ (preprocess
+  (pps ppx_deriving.show)))
+|}
 ;;
 
 let generate (name : string) (schema : Gen_core.schema) : unit =
@@ -112,8 +116,14 @@ let generate (name : string) (schema : Gen_core.schema) : unit =
   in
   let model_file = Gen_model.file schema in
   let repo_file = Gen_repo.file name schema in
-  (* TODO [jerben] write dune file *)
+  let dune_file =
+    Gen_core.
+      { name = "dune"
+      ; template = dune_file_template
+      ; params = [ "name", name ]
+      }
+  in
   Gen_core.write_in_context
     name
-    [ service_file; service_interface_file; model_file; repo_file ]
+    [ service_file; service_interface_file; model_file; repo_file; dune_file ]
 ;;
