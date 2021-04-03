@@ -13,7 +13,6 @@
   "workspaceFolder": "/workspace",
   "remoteEnv": {
     "DATABASE_URL": "postgresql://admin:password@database:5432/dev",
-    "DATABASE_URL_TEST_POSTGRESQL": "postgresql://admin:password@database:5432/dev",
     "VERSION": "dev",
     "OPAM_SWITCH_PREFIX": "/home/opam/.opam/4.11",
     "CAML_LD_LIBRARY_PATH": "/home/opam/.opam/4.11/lib/stublibs:/home/opam/.opam/4.11/lib/ocaml/stublibs:/home/opam/.opam/4.11/lib/ocaml",

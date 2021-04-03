@@ -142,7 +142,7 @@ let services =
 
 let () =
   let open Lwt.Syntax in
-  Sihl.Configuration.read_string "DATABASE_URL_TEST_POSTGRESQL"
+  Sihl.Configuration.read_string "DATABASE_URL"
   |> Option.value ~default:"postgres://admin:password@127.0.0.1:5432/dev"
   |> Unix.putenv "DATABASE_URL";
   Logs.set_level (Sihl.Log.get_log_level ());
