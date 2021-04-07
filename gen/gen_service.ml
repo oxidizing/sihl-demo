@@ -95,38 +95,45 @@ let dune_file_template =
 ;;
 
 let generate (name : string) (schema : Gen_core.schema) : unit =
-  let create_args =
-    schema |> List.map ~f:(fun (name, _) -> name) |> String.concat ~sep:" "
-  in
-  let ml_filename = Format.sprintf "%s.ml" name in
-  let ml_parameters = [ "name", name; "create_args", create_args ] in
-  let mli_filename = Format.sprintf "%s.mli" name in
-  let mli_parameters =
-    [ "model_type", Gen_model.model_type schema
-    ; "ctor_type", Gen_model.ctor_type schema
-    ]
-  in
-  let service_file =
-    Gen_core.
-      { name = ml_filename; template = ml_template; params = ml_parameters }
-  in
-  let service_interface_file =
-    Gen_core.
-      { name = mli_filename; template = mli_template; params = mli_parameters }
-  in
-  let model_file = Gen_model.file schema in
-  let repo_file = Gen_repo.file name schema in
-  let dune_file =
-    Gen_core.
-      { name = "dune"
-      ; template = dune_file_template
-      ; params = [ "name", name ]
-      }
-  in
-  Gen_core.write_in_context
-    name
-    [ service_file; service_interface_file; model_file; repo_file; dune_file ];
-  Gen_core.write_in_test
-    name
-    Gen_service_test.[ test_file name schema; dune_file name ]
+  if String.contains name ':'
+  then failwith "Invalid service name provided, it can not contain ':'"
+  else (
+    let create_args =
+      schema |> List.map ~f:(fun (name, _) -> name) |> String.concat ~sep:" "
+    in
+    let ml_filename = Format.sprintf "%s.ml" name in
+    let ml_parameters = [ "name", name; "create_args", create_args ] in
+    let mli_filename = Format.sprintf "%s.mli" name in
+    let mli_parameters =
+      [ "model_type", Gen_model.model_type schema
+      ; "ctor_type", Gen_model.ctor_type schema
+      ]
+    in
+    let service_file =
+      Gen_core.
+        { name = ml_filename; template = ml_template; params = ml_parameters }
+    in
+    let service_interface_file =
+      Gen_core.
+        { name = mli_filename
+        ; template = mli_template
+        ; params = mli_parameters
+        }
+    in
+    let model_file = Gen_model.file schema in
+    let repo_file = Gen_repo.file name schema in
+    let dune_file =
+      Gen_core.
+        { name = "dune"
+        ; template = dune_file_template
+        ; params = [ "name", name ]
+        }
+    in
+    Gen_core.write_in_context
+      name
+      [ service_file; service_interface_file; model_file; repo_file; dune_file ];
+    Gen_core.write_in_test
+      name
+      Gen_service_test.[ test_file name schema; dune_file name ]);
+  Gen_migration.write_migration_file name schema
 ;;

@@ -125,3 +125,10 @@ let write_in_test (name : string) (files : file list) : unit =
     Bos.OS.Dir.create (Fpath.of_string test_path |> Result.get_ok) |> ignore;
     List.iter ~f:(fun file -> write_file file test_path) files
 ;;
+
+let write_in_database (file : file) : unit =
+  let root = Sihl.Configuration.root_path () |> Option.get in
+  let path = Format.sprintf "%s/database" root in
+  Bos.OS.Dir.create (Fpath.of_string path |> Result.get_ok) |> ignore;
+  List.iter ~f:(fun file -> write_file file path) [ file ]
+;;

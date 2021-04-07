@@ -1,7 +1,9 @@
 let service =
   Sihl.Command.make
     ~name:"gen.service"
-    ~help:"<service name> <name1>:<type> <name2>:<type> <name3>:<type> ..."
+    ~help:
+      "<service name> <name1>:<type> <name2>:<type> <name3>:<type> ... \n\
+       Supported types: int, float, bool, string, datetime"
     ~description:"Generates a service, tests and migrations."
     (function
       | service_name :: schema ->
