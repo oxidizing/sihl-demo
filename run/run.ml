@@ -19,6 +19,8 @@ let services =
       ~jobs:
         [ Sihl_queue.hide Job.cook_pizza; Sihl_queue.hide Job.order_ingredient ]
       ()
+  ; Service.MarketingMail.register ()
+  ; Service.InfoMail.register ()
   ]
 ;;
 
