@@ -14,36 +14,24 @@ let clean =
   else Repo.clean
 ;;
 
-let find name = Repo.find name
+let find id = Repo.find id
 let query = Repo.find_all
 
 let insert ({{name}} : t) =
   let open Lwt.Syntax in
-  let* found = find {{name}}.name in
-  match found with
+  let* () = Repo.insert {{name}} in
+  let* inserted = Repo.find {{name}}.id in
+  (match inserted with
+  | Some {{name}} -> Lwt.return (Ok {{name}})
   | None ->
-    let* () = Repo.insert {{name}} in
-    let* inserted = Repo.find {{name}}.name in
-    (match inserted with
-    | Some {{name}} -> Lwt.return (Ok {{name}})
-    | None ->
-      Logs.err (fun m ->
-          m "Failed to insert {{name}} '%a'" pp {{name}});
-      Lwt.return @@ Error "Failed to insert {{name}}")
-  | Some _ ->
-    Lwt.return
-    @@ Error (Format.sprintf "{{name}} '%s' already exists" {{name}}.name)
+    Logs.err (fun m ->
+        m "Failed to insert {{name}} '%a'" pp {{name}});
+    Lwt.return @@ Error "Failed to insert {{name}}")
 ;;
 
 let create {{create_args}} : (t, string) Result.t Lwt.t =
-  let open Lwt.Syntax in
-  let* {{name}} = find name in
-  match {{name}} with
-  | None -> insert @@ create {{create_args}}
-  | Some {{name}} ->
-    Lwt.return
-      (Error (Format.sprintf "{{name}} '%s' already exists" {{name}}.name))
-;;
+  insert @@ create {{create_args}}
+ ;;
 
 let update _ ({{name}} : t) =
   let open Lwt.Syntax in

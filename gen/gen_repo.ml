@@ -19,7 +19,7 @@ INSERT INTO {{table_name}} (
   created_at,
   updated_at
 ) VALUES (
-  ?,
+  ?::uuid,
   {{parameters}},
   ?,
   ?
@@ -43,7 +43,7 @@ UPDATE {{table_name}} SET
   {{update_fields}},
   created_at = $4,
   updated_at = $5
-WHERE uuid = $1;
+WHERE uuid = $1::uuid;
         |sql}
 ;;
 
@@ -66,7 +66,7 @@ SELECT
   created_at,
   updated_at
 FROM {{table_name}}
-WHERE name = ?
+WHERE uuid = ?::uuid
         |sql}
 ;;
 
@@ -118,7 +118,7 @@ let delete_request =
     Caqti_type.string
     {sql|
 DELETE FROM {{table_name}}
-WHERE name = ?
+WHERE uuid = ?::uuid
         |sql}
 ;;
 
@@ -192,7 +192,7 @@ let update_fields (schema : Gen_core.schema) =
 ;;
 
 let parameters (schema : Gen_core.schema) =
-  schema |> List.map ~f:(fun _ -> "?") |> String.concat ~sep:", \n  "
+  schema |> List.map ~f:(fun _ -> "?") |> String.concat ~sep:",\n  "
 ;;
 
 let file (name : string) (schema : Gen_core.schema) =

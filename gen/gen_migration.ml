@@ -4,16 +4,16 @@ let create_{{name}}s_table =
   Sihl.Database.Migration.create_step
     ~label:"create {{name}}s table"
     {sql|
-     CREATE TABLE IF NOT EXISTS {{name}}s (
-       id serial,
-       uuid UUID NOT NULL,
-       {{schema}},
-       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     PRIMARY KEY (id),
-     UNIQUE (uuid)
-     );
-     |sql}
+CREATE TABLE IF NOT EXISTS {{name}}s (
+  id serial,
+  uuid UUID NOT NULL,
+  {{schema}},
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+PRIMARY KEY (id),
+UNIQUE (uuid)
+);
+|sql}
 ;;
 
 let migration =
@@ -41,7 +41,7 @@ let migration_schema (schema : Gen_core.schema) =
   schema
   |> List.map ~f:(fun (name, type_) ->
          Format.sprintf "%s %s" name (postgresql_type_of_gen_type type_))
-  |> String.concat ~sep:",\n"
+  |> String.concat ~sep:",\n  "
 ;;
 
 let write_migration_file (name : string) (schema : Gen_core.schema) =
