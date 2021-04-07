@@ -27,6 +27,7 @@ let () =
            ; Command.cook_pizza
            ; Command.order_ingredient
            ; Gen.service
+           ; Gen.view
            ; Gen.html
            ; Gen.json
            ])

@@ -132,3 +132,10 @@ let write_in_database (file : file) : unit =
   Bos.OS.Dir.create (Fpath.of_string path |> Result.get_ok) |> ignore;
   List.iter ~f:(fun file -> write_file file path) [ file ]
 ;;
+
+let write_in_view (file : file) : unit =
+  let root = Sihl.Configuration.root_path () |> Option.get in
+  let path = Format.sprintf "%s/web/view" root in
+  Bos.OS.Dir.create (Fpath.of_string path |> Result.get_ok) |> ignore;
+  List.iter ~f:(fun file -> write_file file path) [ file ]
+;;

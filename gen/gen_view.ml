@@ -1,0 +1,254 @@
+let template =
+  {|
+open Tyxml
+
+type t = Pizza.ingredient
+
+let%html delete_button (ingredient : Pizza.ingredient) csrf =
+  \{\|
+<form action="\|\}
+    (Format.sprintf "/ingredients/%s" ingredient.Pizza.name)
+    \{\|" method="Post">
+  <input type="hidden" name="_csrf" value="\|\}
+    csrf
+    \{\|">
+  <input type="hidden" name="_method" value="delete">
+  <input type="submit" value="Delete">
+</form>
+\|\}
+;;
+
+let list_header =
+  [%html
+    \{\|<tr><th>Name</th><th>Price</th><th>Vegan</th><th>Update at</th><th>Created at</th></tr>\|\}]
+;;
+
+let create_link = [%html \{\|<div><a href="/ingredients/new">Create</a></div>\|\}]
+
+let edit_link name =
+  [%html
+    \{\|<a href="\|\} (Format.sprintf "/ingredients/%s/edit" name) \{\|">Edit</a>\|\}]
+;;
+
+let alert_message alert =
+  [%html
+    \{\|<span class="alert">\|\}
+      [ Html.txt (Option.value alert ~default:"") ]
+      \{\|</span>\|\}]
+;;
+
+let notice_message notice =
+  [%html
+    \{\|<span class="notice">\|\}
+      [ Html.txt (Option.value notice ~default:"") ]
+      \{\|</span>\|\}]
+;;
+
+let index req csrf (ingredients : Pizza.ingredient list) =
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
+  let notice = Sihl.Web.Flash.find_notice req in
+  let alert = Sihl.Web.Flash.find_alert req in
+  let list_items =
+    List.map
+      ~f:(fun (ingredient : Pizza.ingredient) ->
+        [%html
+          \{\|<tr><td><a href="\|\}
+            (Format.sprintf "/ingredients/%s" ingredient.Pizza.name)
+            \{\|">\|\}
+            [ Html.txt ingredient.Pizza.name ]
+            \{\|</a></td><td>\|\}
+            [ Html.txt (string_of_int ingredient.Pizza.price) ]
+            \{\|</td><td>\|\}
+            [ Html.txt (string_of_bool ingredient.Pizza.is_vegan) ]
+            \{\|</td><td>\|\}
+            [ Html.txt (Ptime.to_rfc3339 ingredient.Pizza.created_at) ]
+            \{\|</td><td>\|\}
+            [ Html.txt (Ptime.to_rfc3339 ingredient.Pizza.updated_at) ]
+            \{\|</td><td>\|\}
+            [ delete_button ingredient csrf ]
+            [ edit_link ingredient.Pizza.name ]
+            \{\|</td></tr>\|\}])
+      ingredients
+  in
+  let ingredients =
+    [%html
+      \{\|<div><span>Ingredients</span><table><tbody>\|\}
+        (List.cons list_header list_items)
+        \{\|</tbody></table></div>\|\}]
+  in
+  Lwt.return
+  @@ Layout.page
+       (Some user)
+       [ alert_message alert; notice_message notice; create_link; ingredients ]
+;;
+
+let new' req csrf (form : Rest.Form.t) =
+  let open Lwt.Syntax in
+  let notice = Sihl.Web.Flash.find_notice req in
+  let alert = Sihl.Web.Flash.find_alert req in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
+  let name_value, name_error = Rest.Form.find "name" form in
+  let vegan_value, _ = Rest.Form.find "is_vegan" form in
+  let price_value, price_error = Rest.Form.find "price" form in
+  let checkbox =
+    if Option.bind vegan_value bool_of_string_opt |> Option.value ~default:false
+    then
+      [%html \{\|<input type="checkbox" name="is_vegan" value="true" checked>\|\}]
+    else [%html \{\|<input type="checkbox" name="is_vegan" value="true">\|\}]
+  in
+  let form =
+    [%html
+      \{\|
+<form action="/ingredients" method="Post">
+  <input type="hidden" name="_csrf" value="\|\}
+        csrf
+        \{\|">
+  <div>
+    <span>Name</span>
+    <input name="name" value="\|\}
+        (Option.value ~default:"" name_value)
+        \{\|">
+  </div>
+  <p class="alert">\|\}
+        [ Html.txt (Option.value ~default:"" name_error) ]
+        \{\|</p>
+  <div>
+    <label>Is it vegan?</label>\|\}
+        [ checkbox ]
+        \{\|
+    <input type="hidden" name="is_vegan" value="false">
+  </div>
+  <div>
+    <label>Price</label>
+    <input name="price" value="\|\}
+        (Option.value ~default:"" price_value)
+        \{\|">
+  </div>
+  <p class="alert">\|\}
+        [ Html.txt (Option.value ~default:"" price_error) ]
+        \{\|</p>
+  <div>
+    <input type="submit" value="Create">
+  </div>
+</form>
+\|\}]
+  in
+  Lwt.return
+  @@ Layout.page
+       (Some user)
+       [ alert_message alert; notice_message notice; form ]
+;;
+
+let show req (ingredient : Pizza.ingredient) =
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
+  let notice = Sihl.Web.Flash.find_notice req in
+  let alert = Sihl.Web.Flash.find_alert req in
+  let body =
+    [%html
+      \{\|<div><div>
+          <span>Name: </span><span>\|\}
+        [ Html.txt ingredient.Pizza.name ]
+        \{\|</span></div>
+        <div><span>Vegan: </span><span>\|\}
+        [ Html.txt (string_of_bool ingredient.Pizza.is_vegan) ]
+        \{\|</span></div>
+         <div><span>Price: </span><span>\|\}
+        [ Html.txt (string_of_int ingredient.Pizza.price) ]
+        \{\|</span></div>\|\}
+        [ edit_link ingredient.Pizza.name ]
+        \{\|</div>\|\}]
+  in
+  Lwt.return
+  @@ Layout.page
+       (Some user)
+       [ alert_message alert; notice_message notice; body ]
+;;
+
+let edit req csrf (form : Rest.Form.t) (ingredient : Pizza.ingredient) =
+  let open Lwt.Syntax in
+  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
+  let notice = Sihl.Web.Flash.find_notice req in
+  let alert = Sihl.Web.Flash.find_alert req in
+  let name, name_error = Rest.Form.find "name" form in
+  let vegan, _ = Rest.Form.find "is_vegan" form in
+  let price_value, price_error = Rest.Form.find "price" form in
+  let checkbox =
+    if ingredient.Pizza.is_vegan
+       || Option.equal String.equal vegan (Some "true")
+    then
+      [%html \{\|<input type="checkbox" name="is_vegan" value="true" checked>\|\}]
+    else [%html \{\|<input type="checkbox" name="is_vegan" value="true">\|\}]
+  in
+  let form =
+    [%html
+      \{\|
+<form action="\|\}
+        (Format.sprintf "/ingredients/%s" ingredient.Pizza.name)
+        \{\|" method="Post">
+  <input type="hidden" name="_csrf" value="\|\}
+        csrf
+        \{\|">
+  <input type="hidden" name="_method" value="put">
+  <div>
+    <span>Name</span>
+    <input name="name" value="\|\}
+        (Option.value ~default:ingredient.Pizza.name name)
+        \{\|">
+  </div>
+  <p class="alert">\|\}
+        [ Html.txt (Option.value ~default:"" name_error) ]
+        \{\|</p>
+  <div>
+    <label>Is it vegan?</label>
+         \|\}
+        [ checkbox ]
+        \{\|
+    <input type="hidden" name="is_vegan" value="false">
+  </div>
+  <div>
+    <label>Price</label>
+    <input name="price" value="\|\}
+        (Option.value
+           ~default:(string_of_int ingredient.Pizza.price)
+           price_value)
+        \{\|">
+  </div>
+  <p class="alert">\|\}
+        [ Html.txt (Option.value ~default:"" price_error) ]
+        \{\|</p>
+  <input type="submit" value="Update">
+</form>
+\|\}]
+  in
+  Lwt.return
+  @@ Layout.page
+       (Some user)
+       [ alert_message alert; notice_message notice; form ]
+;;
+
+|}
+;;
+
+let unescape_template t =
+  t
+  |> CCString.replace ~sub:{|\{\||} ~by:"{|"
+  |> CCString.replace ~sub:{|\|\}|} ~by:"|}"
+;;
+
+let params (schema : Gen_core.schema) =
+  schema |> ignore;
+  []
+;;
+
+let generate (name : string) (schema : Gen_core.schema) =
+  if String.contains name ':'
+  then failwith "Invalid service name provided, it can not contain ':'"
+  else (
+    let file =
+      Gen_core.
+        { name = Format.sprintf "%s.ml" name; template; params = params schema }
+    in
+    Gen_core.write_in_view file)
+;;

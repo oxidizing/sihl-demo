@@ -2,7 +2,7 @@ let service =
   Sihl.Command.make
     ~name:"gen.service"
     ~help:
-      "<service name> <name1>:<type> <name2>:<type> <name3>:<type> ... \n\
+      "<service name> <name>:<type> <name>:<type> <name>:<type> ... \n\
        Supported types: int, float, bool, string, datetime"
     ~description:"Generates a service, tests and migrations."
     (function
@@ -14,7 +14,26 @@ let service =
         | Error msg ->
           print_endline msg;
           raise @@ Sihl.Command.Exception "")
-      | _ -> Lwt.return @@ None)
+      | [] -> Lwt.return @@ None)
+;;
+
+let view =
+  Sihl.Command.make
+    ~name:"gen.view"
+    ~help:
+      "<name> <name>:<type> <name>:<type> <name>:<type> ... \n\
+       Supported types: int, float, bool, string, datetime"
+    ~description:"Generates an HTML view."
+    (function
+      | name :: schema ->
+        (match Gen_core.schema_of_string schema with
+        | Ok schema ->
+          Gen_view.generate name schema;
+          Lwt.return @@ Some ()
+        | Error msg ->
+          print_endline msg;
+          raise @@ Sihl.Command.Exception "")
+      | [] -> Lwt.return @@ None)
 ;;
 
 let html =
