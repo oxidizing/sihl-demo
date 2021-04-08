@@ -4,7 +4,7 @@ open Tyxml
 
 type t = {{module}}.t
 
-let%html delete_button ({{name}} : {{module}}.name) csrf =
+let%html delete_button ({{name}} : {{module}}.t) csrf =
   \{\|
 <form action="\|\}
     (Format.sprintf "/{{name}}s/%s" {{name}}.{{module}}.id)
@@ -64,7 +64,7 @@ let index req csrf ({{name}}s : {{module}}.t list) =
          "</td><td>"
          [ delete_button {{name}} csrf ]
          [ edit_link {{name}}.{{module}}.id ]
-         "</td></tr>"])
+         "</td></tr>"]) {{name}}s
   in
   let {{name}}s =
     [%html
@@ -96,9 +96,7 @@ let new' req csrf (form : Rest.Form.t) =
 let show req ({{name}} : {{module}}.t) =
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  let body = [%html \{\|
-{{show}}
-\|\}] in
+  let body = [%html "{{show}}"] in
   Lwt.return
   @@ Layout.page
        None
@@ -135,36 +133,31 @@ let table_header (schema : Gen_core.schema) : string =
   |> Format.sprintf "<tr>%s</tr>"
 ;;
 
-let table_cell name module_ (field_name, type_) =
+let stringify name module_ (field_name, type_) =
   let open Gen_core in
   match type_ with
   | Float ->
     Format.sprintf
-      {|"<td>"[ Html.txt (string_of_float %s.%s.%s) ]"</td>"|}
+      "[ Html.txt (string_of_float %s.%s.%s) ]"
       name
       module_
       field_name
   | Int ->
     Format.sprintf
-      {|"<td>"[ Html.txt (string_of_int %s.%s.%s) ]"</td>"|}
+      "[ Html.txt (string_of_int %s.%s.%s) ]"
       name
       module_
       field_name
   | Bool ->
     Format.sprintf
-      {|"<td>"[ Html.txt (string_of_bool %s.%s.%s) ]"</td>"|}
+      "[ Html.txt (string_of_bool %s.%s.%s) ]"
       name
       module_
       field_name
-  | String ->
-    Format.sprintf
-      {|"<td>"[ Html.txt %s.%s.%s ]"</td>"|}
-      name
-      module_
-      field_name
+  | String -> Format.sprintf "[ Html.txt %s.%s.%s ]" name module_ field_name
   | Datetime ->
     Format.sprintf
-      {|"<td>"[ Html.txt %s.%s.%s ]"</td>"|}
+      "[ Html.txt (Ptime.to_rfc3339 %s.%s.%s) ]"
       name
       module_
       field_name
@@ -172,14 +165,115 @@ let table_cell name module_ (field_name, type_) =
 
 let table_row name module_ (schema : Gen_core.schema) =
   schema
-  |> List.map ~f:(table_cell name module_)
+  |> List.map ~f:(fun field ->
+         Format.sprintf "\"<td>\"%s\"</td>\"" (stringify name module_ field))
   |> String.concat ~sep:"\n"
-  |> Format.sprintf "<tr>%s</tr>"
 ;;
 
-let form_values _ = ""
-let form _ = {|<form></form>|}
-let show _ = {|<form></form>|}
+let form_values schema =
+  schema
+  |> List.map ~f:fst
+  |> List.map ~f:(fun name ->
+         Format.sprintf
+           "let %s_value, %s_error = Rest.Form.find \"%s\" form in"
+           name
+           name
+           name)
+  |> String.concat ~sep:"\n"
+;;
+
+let form_input name module_ (field_name, field_type) =
+  let open Gen_core in
+  match field_type with
+  | Float ->
+    Format.sprintf
+      {|<input name="%s" value="\|\}
+        (Option.value ~default:(string_of_float %s.%s.%s) %s)
+        \{\|">|}
+      name
+      name
+      module_
+      field_name
+      name
+  | Int ->
+    Format.sprintf
+      {|<input name="%s" value="\|\}
+        (Option.value ~default:(string_of_int %s.%s.%s) %s)
+        \{\|">|}
+      name
+      name
+      module_
+      field_name
+      name
+  | Bool ->
+    Format.sprintf
+      {|<input name="%s" value="\|\}
+        (Option.value ~default:(string_of_bool %s.%s.%s) %s)
+        \{\|">|}
+      name
+      name
+      module_
+      field_name
+      name
+  | String ->
+    Format.sprintf
+      {|<input name="%s" value="\|\}
+        (Option.value ~default:%s.%s.%s %s)
+        \{\|">|}
+      name
+      name
+      module_
+      field_name
+      name
+  | Datetime ->
+    Format.sprintf
+      {|<input name="%s" value="\|\}
+        (Option.value ~default:(Ptime.to_rfc3339 %s.%s.%s) %s)
+        \{\|">|}
+      name
+      name
+      module_
+      field_name
+      name
+;;
+
+let form_elements name module_ schema =
+  schema
+  |> List.map ~f:(fun field ->
+         Format.sprintf
+           "<label>{{name}}</label>%s"
+           (form_input name module_ field))
+  |> String.concat ~sep:"\n"
+  |> Format.sprintf "<div>%s</div>"
+;;
+
+let form name module_ schema =
+  {|
+<form action="\|\}
+    (Format.sprintf "/{{name}}/%s" {{name}}.{{module}}.id)
+    \{\|" method="Post">
+  <input type="hidden" name="_csrf" value="\|\}
+    csrf
+    \{\|">
+   |}
+  ^ form_elements name module_ schema
+  ^ {|
+  <input type="hidden" name="_method" value="put">
+  <input type="submit" value="Update">
+</form>
+|}
+;;
+
+let show name module_ (schema : Gen_core.schema) =
+  schema
+  |> List.map ~f:(fun field ->
+         Format.sprintf
+           {|"<div><span>%s: </span><span>" %s "</span></div>"|}
+           name
+           (stringify name module_ field))
+  |> String.concat ~sep:"\n"
+  |> Format.sprintf "<div>%s [ edit_link {{name}}.{{module}}.id ]</div>"
+;;
 
 let create_params name (schema : Gen_core.schema) =
   let module_ = CCString.capitalize_ascii name in
@@ -188,8 +282,8 @@ let create_params name (schema : Gen_core.schema) =
   ; "table_header", table_header schema
   ; "table_row", table_row name module_ schema
   ; "form_values", form_values schema
-  ; "form", form schema
-  ; "show", show schema
+  ; "form", form name module_ schema
+  ; "show", show name module_ schema
   ]
 ;;
 
@@ -199,7 +293,7 @@ let generate (name : string) (schema : Gen_core.schema) =
   else (
     let file =
       Gen_core.
-        { name = Format.sprintf "%s.ml" name
+        { name = Format.sprintf "%ss.ml" name
         ; template = unescape_template template
         ; params = create_params name schema
         }
