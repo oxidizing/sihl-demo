@@ -30,4 +30,20 @@ let show req =
 ;;
 
 let create _ = failwith "todo pizza create"
-let delete _ = failwith "todo pizza delete"
+
+let delete req =
+  let open Lwt.Syntax in
+  let name = Sihl.Web.Router.param req "name" in
+  let* pizza = Pizza.find_pizza name in
+  match pizza with
+  | None ->
+    Sihl.Web.Response.redirect_to "/pizzas"
+    |> Sihl.Web.Flash.set_notice (Format.sprintf "Pizza '%s' not found" name)
+    |> Lwt.return
+  | Some pizza ->
+    let* () = Pizza.delete_pizza pizza in
+    Sihl.Web.Response.redirect_to "/pizzas"
+    |> Sihl.Web.Flash.set_notice
+         (Format.sprintf "Pizza '%s' removed" pizza.Pizza.name)
+    |> Lwt.return
+;;
