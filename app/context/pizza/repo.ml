@@ -111,9 +111,9 @@ let find_ingredients_of_pizza_request =
           ingredients.created_at,
           ingredients.updated_at
         FROM ingredients
-        LEFT JOIN pizzas_ingredients
+        INNER JOIN pizzas_ingredients
         ON ingredients.id = pizzas_ingredients.ingredient_id
-        LEFT JOIN pizzas
+        INNER JOIN pizzas
         ON pizzas.id = pizzas_ingredients.pizza_id
         AND pizzas.name = ?
         |sql}
@@ -185,35 +185,29 @@ let find_pizza name =
 let find_pizzas_request =
   Caqti_request.collect
     Caqti_type.unit
-    Caqti_type.(tup4 string string ptime ptime)
+    Caqti_type.(tup3 string ptime ptime)
     {sql|
         SELECT
-          pizza_name,
-          ingredient_name
+          name,
           created_at,
           updated_at
         FROM pizzas
-        LEFT JOIN pizzas_ingredients
-        ON pizzas_ingredients.pizza_id = pizzas.id
-        LEFT JOIN ingredients
-        ON ingredients.id = pizzas_ingredients.ingredient_id
         |sql}
 ;;
 
-let find_pizzas () = failwith "todo"
-
-(*   let open Lwt.Syntax in
- *   let* pizzas =
- *     Sihl.Database.query' (fun connection ->
- *         let module Connection = (val connection : Caqti_lwt.CONNECTION) in
- *         Connection.collect_list find_pizzas_request ())
- *   in
- *   Lwt.return
- *   @@ List.map
- *        ~f:(fun (name, created_at, updated_at) ->
- *          Model.{ name; ingredients; created_at; updated_at })
- *        pizzas
- * ;; *)
+let find_pizzas () : Model.t list Lwt.t =
+  let open Lwt.Syntax in
+  let* pizzas =
+    Sihl.Database.query' (fun connection ->
+        let module Connection = (val connection : Caqti_lwt.CONNECTION) in
+        Connection.collect_list find_pizzas_request ())
+  in
+  List.map
+    ~f:(fun (name, created_at, updated_at) ->
+      Model.{ name; ingredients = []; created_at; updated_at })
+    pizzas
+  |> Lwt.return
+;;
 
 let insert_pizza_request =
   Caqti_request.exec
