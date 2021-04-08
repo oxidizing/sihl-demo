@@ -2,12 +2,12 @@ let template =
   {|
 open Tyxml
 
-type t = Pizza.ingredient
+type t = {{module}}.t
 
-let%html delete_button (ingredient : Pizza.ingredient) csrf =
+let%html delete_button ({{name}} : {{module}}.name) csrf =
   \{\|
 <form action="\|\}
-    (Format.sprintf "/ingredients/%s" ingredient.Pizza.name)
+    (Format.sprintf "/{{name}}s/%s" {{name}}.{{module}}.id)
     \{\|" method="Post">
   <input type="hidden" name="_csrf" value="\|\}
     csrf
@@ -20,14 +20,14 @@ let%html delete_button (ingredient : Pizza.ingredient) csrf =
 
 let list_header =
   [%html
-    \{\|<tr><th>Name</th><th>Price</th><th>Vegan</th><th>Update at</th><th>Created at</th></tr>\|\}]
+    \{\|{{table_header}}\|\}]
 ;;
 
-let create_link = [%html \{\|<div><a href="/ingredients/new">Create</a></div>\|\}]
+let create_link = [%html \{\|<div><a href="/{{name}s/new">Create</a></div>\|\}]
 
-let edit_link name =
+let edit_link id =
   [%html
-    \{\|<a href="\|\} (Format.sprintf "/ingredients/%s/edit" name) \{\|">Edit</a>\|\}]
+    \{\|<a href="\|\} (Format.sprintf "/{{name}}/%s/edit" id) \{\|">Edit</a>\|\}]
 ;;
 
 let alert_message alert =
@@ -44,202 +44,153 @@ let notice_message notice =
       \{\|</span>\|\}]
 ;;
 
-let index req csrf (ingredients : Pizza.ingredient list) =
-  let open Lwt.Syntax in
-  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
+let index req csrf ({{name}}s : {{module}}.t list) =
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
   let list_items =
     List.map
-      ~f:(fun (ingredient : Pizza.ingredient) ->
+      ~f:(fun ({{name}} : {{module}}.t) ->
         [%html
-          \{\|<tr><td><a href="\|\}
-            (Format.sprintf "/ingredients/%s" ingredient.Pizza.name)
-            \{\|">\|\}
-            [ Html.txt ingredient.Pizza.name ]
-            \{\|</a></td><td>\|\}
-            [ Html.txt (string_of_int ingredient.Pizza.price) ]
-            \{\|</td><td>\|\}
-            [ Html.txt (string_of_bool ingredient.Pizza.is_vegan) ]
-            \{\|</td><td>\|\}
-            [ Html.txt (Ptime.to_rfc3339 ingredient.Pizza.created_at) ]
-            \{\|</td><td>\|\}
-            [ Html.txt (Ptime.to_rfc3339 ingredient.Pizza.updated_at) ]
-            \{\|</td><td>\|\}
-            [ delete_button ingredient csrf ]
-            [ edit_link ingredient.Pizza.name ]
-            \{\|</td></tr>\|\}])
-      ingredients
+         "<tr><td><a href=\""
+         (Format.sprintf "/{{name}}s/%s" {{name}}.{{module}}.id)
+         \{\|">\|\}
+         [ Html.txt {{name}}.{{module}}.id ]
+         \{\|</a></td>\|\}
+         {{table_row}}
+         "<td>"
+         [ Html.txt (Ptime.to_rfc3339 {{name}}.{{module}}.created_at) ]
+         "</td><td>"
+         [ Html.txt (Ptime.to_rfc3339 {{name}}.{{module}}.updated_at) ]
+         "</td><td>"
+         [ delete_button {{name}} csrf ]
+         [ edit_link {{name}}.{{module}}.id ]
+         "</td></tr>"])
   in
-  let ingredients =
+  let {{name}}s =
     [%html
-      \{\|<div><span>Ingredients</span><table><tbody>\|\}
+      \{\|<div><span>{{module}}s</span><table><tbody>\|\}
         (List.cons list_header list_items)
         \{\|</tbody></table></div>\|\}]
   in
   Lwt.return
   @@ Layout.page
-       (Some user)
-       [ alert_message alert; notice_message notice; create_link; ingredients ]
+       None
+       [ alert_message alert; notice_message notice; create_link; {{name}}s ]
 ;;
 
 let new' req csrf (form : Rest.Form.t) =
-  let open Lwt.Syntax in
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let name_value, name_error = Rest.Form.find "name" form in
   let vegan_value, _ = Rest.Form.find "is_vegan" form in
   let price_value, price_error = Rest.Form.find "price" form in
-  let checkbox =
-    if Option.bind vegan_value bool_of_string_opt |> Option.value ~default:false
-    then
-      [%html \{\|<input type="checkbox" name="is_vegan" value="true" checked>\|\}]
-    else [%html \{\|<input type="checkbox" name="is_vegan" value="true">\|\}]
-  in
-  let form =
-    [%html
-      \{\|
-<form action="/ingredients" method="Post">
-  <input type="hidden" name="_csrf" value="\|\}
-        csrf
-        \{\|">
-  <div>
-    <span>Name</span>
-    <input name="name" value="\|\}
-        (Option.value ~default:"" name_value)
-        \{\|">
-  </div>
-  <p class="alert">\|\}
-        [ Html.txt (Option.value ~default:"" name_error) ]
-        \{\|</p>
-  <div>
-    <label>Is it vegan?</label>\|\}
-        [ checkbox ]
-        \{\|
-    <input type="hidden" name="is_vegan" value="false">
-  </div>
-  <div>
-    <label>Price</label>
-    <input name="price" value="\|\}
-        (Option.value ~default:"" price_value)
-        \{\|">
-  </div>
-  <p class="alert">\|\}
-        [ Html.txt (Option.value ~default:"" price_error) ]
-        \{\|</p>
-  <div>
-    <input type="submit" value="Create">
-  </div>
-</form>
-\|\}]
-  in
+  let form = [%html \{\|
+{{form}}
+\|\}] in
   Lwt.return
   @@ Layout.page
-       (Some user)
+       None
        [ alert_message alert; notice_message notice; form ]
 ;;
 
-let show req (ingredient : Pizza.ingredient) =
-  let open Lwt.Syntax in
-  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
+let show req ({{name}} : {{module}}.t) =
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  let body =
-    [%html
-      \{\|<div><div>
-          <span>Name: </span><span>\|\}
-        [ Html.txt ingredient.Pizza.name ]
-        \{\|</span></div>
-        <div><span>Vegan: </span><span>\|\}
-        [ Html.txt (string_of_bool ingredient.Pizza.is_vegan) ]
-        \{\|</span></div>
-         <div><span>Price: </span><span>\|\}
-        [ Html.txt (string_of_int ingredient.Pizza.price) ]
-        \{\|</span></div>\|\}
-        [ edit_link ingredient.Pizza.name ]
-        \{\|</div>\|\}]
-  in
+  let body = [%html \{\|
+{{show}}
+\|\}] in
   Lwt.return
   @@ Layout.page
-       (Some user)
+       None
        [ alert_message alert; notice_message notice; body ]
 ;;
 
-let edit req csrf (form : Rest.Form.t) (ingredient : Pizza.ingredient) =
-  let open Lwt.Syntax in
-  let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
+let edit req csrf (form : Rest.Form.t) ({{name}} : {{module}}.t) =
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  let name, name_error = Rest.Form.find "name" form in
-  let vegan, _ = Rest.Form.find "is_vegan" form in
-  let price_value, price_error = Rest.Form.find "price" form in
-  let checkbox =
-    if ingredient.Pizza.is_vegan
-       || Option.equal String.equal vegan (Some "true")
-    then
-      [%html \{\|<input type="checkbox" name="is_vegan" value="true" checked>\|\}]
-    else [%html \{\|<input type="checkbox" name="is_vegan" value="true">\|\}]
-  in
-  let form =
-    [%html
-      \{\|
-<form action="\|\}
-        (Format.sprintf "/ingredients/%s" ingredient.Pizza.name)
-        \{\|" method="Post">
-  <input type="hidden" name="_csrf" value="\|\}
-        csrf
-        \{\|">
-  <input type="hidden" name="_method" value="put">
-  <div>
-    <span>Name</span>
-    <input name="name" value="\|\}
-        (Option.value ~default:ingredient.Pizza.name name)
-        \{\|">
-  </div>
-  <p class="alert">\|\}
-        [ Html.txt (Option.value ~default:"" name_error) ]
-        \{\|</p>
-  <div>
-    <label>Is it vegan?</label>
-         \|\}
-        [ checkbox ]
-        \{\|
-    <input type="hidden" name="is_vegan" value="false">
-  </div>
-  <div>
-    <label>Price</label>
-    <input name="price" value="\|\}
-        (Option.value
-           ~default:(string_of_int ingredient.Pizza.price)
-           price_value)
-        \{\|">
-  </div>
-  <p class="alert">\|\}
-        [ Html.txt (Option.value ~default:"" price_error) ]
-        \{\|</p>
-  <input type="submit" value="Update">
-</form>
-\|\}]
-  in
+  {{form_values}}
+  let form = [%html \{\|
+{{form}}
+\|\}] in
   Lwt.return
   @@ Layout.page
-       (Some user)
+       None
        [ alert_message alert; notice_message notice; form ]
 ;;
 
 |}
 ;;
 
-let unescape_template t =
+let unescape_template (t : string) : string =
   t
   |> CCString.replace ~sub:{|\{\||} ~by:"{|"
   |> CCString.replace ~sub:{|\|\}|} ~by:"|}"
 ;;
 
-let params (schema : Gen_core.schema) =
-  schema |> ignore;
-  []
+let table_header (schema : Gen_core.schema) : string =
+  schema
+  |> List.map ~f:fst
+  |> List.map ~f:(Format.sprintf "<th>%s</th>")
+  |> String.concat ~sep:""
+  |> Format.sprintf "<tr>%s</tr>"
+;;
+
+let table_cell name module_ (field_name, type_) =
+  let open Gen_core in
+  match type_ with
+  | Float ->
+    Format.sprintf
+      {|"<td>"[ Html.txt (string_of_float %s.%s.%s) ]"</td>"|}
+      name
+      module_
+      field_name
+  | Int ->
+    Format.sprintf
+      {|"<td>"[ Html.txt (string_of_int %s.%s.%s) ]"</td>"|}
+      name
+      module_
+      field_name
+  | Bool ->
+    Format.sprintf
+      {|"<td>"[ Html.txt (string_of_bool %s.%s.%s) ]"</td>"|}
+      name
+      module_
+      field_name
+  | String ->
+    Format.sprintf
+      {|"<td>"[ Html.txt %s.%s.%s ]"</td>"|}
+      name
+      module_
+      field_name
+  | Datetime ->
+    Format.sprintf
+      {|"<td>"[ Html.txt %s.%s.%s ]"</td>"|}
+      name
+      module_
+      field_name
+;;
+
+let table_row name module_ (schema : Gen_core.schema) =
+  schema
+  |> List.map ~f:(table_cell name module_)
+  |> String.concat ~sep:"\n"
+  |> Format.sprintf "<tr>%s</tr>"
+;;
+
+let form_values _ = ""
+let form _ = {|<form></form>|}
+let show _ = {|<form></form>|}
+
+let create_params name (schema : Gen_core.schema) =
+  let module_ = CCString.capitalize_ascii name in
+  [ "module", module_
+  ; "name", name
+  ; "table_header", table_header schema
+  ; "table_row", table_row name module_ schema
+  ; "form_values", form_values schema
+  ; "form", form schema
+  ; "show", show schema
+  ]
 ;;
 
 let generate (name : string) (schema : Gen_core.schema) =
@@ -248,7 +199,10 @@ let generate (name : string) (schema : Gen_core.schema) =
   else (
     let file =
       Gen_core.
-        { name = Format.sprintf "%s.ml" name; template; params = params schema }
+        { name = Format.sprintf "%s.ml" name
+        ; template = unescape_template template
+        ; params = create_params name schema
+        }
     in
     Gen_core.write_in_view file)
 ;;
