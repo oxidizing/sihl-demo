@@ -4,125 +4,207 @@ open Tyxml
 
 type t = {{module}}.t
 
+(* General *)
+
+let%html alert_message alert =
+  {|<span class="alert">\|\}
+    [ Html.txt (Option.value alert ~default:"") ]
+    {|</span>\|\}
+;;
+
+let%html notice_message notice =
+  {|<span class="notice">\|\}
+    [ Html.txt (Option.value notice ~default:"") ]
+    {|</span>\|\}
+;;
+
+let%html page alert notice body =
+  {|
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>{{module}}</title>
+  <style>
+    .alert {
+        color: red;
+    }
+
+    .notice {
+        color: green;
+    }
+  </style>
+  </head>
+    <body>\|\}
+    [ alert_message alert ]
+    [ notice_message notice ]
+    body
+    {|
+     </body>
+</html>
+\|\}
+;;
+
 let%html delete_button ({{name}} : {{module}}.t) csrf =
-  \{\|
+  {|
 <form action="\|\}
     (Format.sprintf "/{{name}}s/%s" {{name}}.{{module}}.id)
-    \{\|" method="Post">
+    {|" method="Post">
   <input type="hidden" name="_csrf" value="\|\}
     csrf
-    \{\|">
+    {|">
   <input type="hidden" name="_method" value="delete">
   <input type="submit" value="Delete">
 </form>
 \|\}
 ;;
 
-let list_header =
-  [%html
-    \{\|{{table_header}}\|\}]
+let%html create_link = {|<div><a href="/{{name}}s/new">Create</a></div>\|\}
+
+let%html edit_link name =
+  {|<a href="\|\} (Format.sprintf "/{{name}}s/%s/edit" name) {|">Edit</a>\|\}
 ;;
 
-let create_link = [%html \{\|<div><a href="/{{name}s/new">Create</a></div>\|\}]
-
-let edit_link id =
-  [%html
-    \{\|<a href="\|\} (Format.sprintf "/{{name}}/%s/edit" id) \{\|">Edit</a>\|\}]
+let form_comp form ({{name}} : {{module}}.t option) =
+  {{form_values}}
+  {{default_values}}
+  [%html {| {{form}} \|\}]
 ;;
 
-let alert_message alert =
-  [%html
-    \{\|<span class="alert">\|\}
-      [ Html.txt (Option.value alert ~default:"") ]
-      \{\|</span>\|\}]
+(* Index *)
+
+let%html table_header = "{{table_header}}"
 ;;
 
-let notice_message notice =
-  [%html
-    \{\|<span class="notice">\|\}
-      [ Html.txt (Option.value notice ~default:"") ]
-      \{\|</span>\|\}]
+let%html table_row csrf ({{name}} : {{module}}.t) =
+  {|<tr><td><a href="\|\}
+    (Format.sprintf "/{{name}}s/%s" {{name}}.{{module}}.id)
+    {|">\|\}
+    [ Html.txt {{name}}.{{module}}.id ]
+    {|</a></td>\|\}
+    {{table_rows}}
+    {|<td>\|\}
+    [ Html.txt (Ptime.to_rfc3339 {{name}}.{{module}}.created_at) ]
+    {|</td><td>\|\}
+    [ Html.txt (Ptime.to_rfc3339 {{name}}.{{module}}.updated_at) ]
+    {|</td><td>\|\}
+    [ delete_button {{name}} csrf ]
+    [ edit_link {{name}}.{{module}}.id ]
+    {|</td></tr>\|\}
 ;;
+
+let%html table table_header items =
+  {|<div><span>{{module}}s</span><table><tbody>\|\}
+    (List.cons table_header items)
+    {|</tbody></table></div>\|\}
+;;
+
+(* Views *)
 
 let index req csrf ({{name}}s : {{module}}.t list) =
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  let list_items =
-    List.map
-      ~f:(fun ({{name}} : {{module}}.t) ->
-        [%html
-         "<tr><td><a href=\""
-         (Format.sprintf "/{{name}}s/%s" {{name}}.{{module}}.id)
-         \{\|">\|\}
-         [ Html.txt {{name}}.{{module}}.id ]
-         \{\|</a></td>\|\}
-         {{table_row}}
-         "<td>"
-         [ Html.txt (Ptime.to_rfc3339 {{name}}.{{module}}.created_at) ]
-         "</td><td>"
-         [ Html.txt (Ptime.to_rfc3339 {{name}}.{{module}}.updated_at) ]
-         "</td><td>"
-         [ delete_button {{name}} csrf ]
-         [ edit_link {{name}}.{{module}}.id ]
-         "</td></tr>"]) {{name}}s
-  in
-  let {{name}}s =
-    [%html
-      \{\|<div><span>{{module}}s</span><table><tbody>\|\}
-        (List.cons list_header list_items)
-        \{\|</tbody></table></div>\|\}]
-  in
-  Lwt.return
-  @@ Layout.page
-       None
-       [ alert_message alert; notice_message notice; create_link; {{name}}s ]
+  let items = List.map ~f:(table_row csrf) {{name}}s in
+  let table = table table_header items in
+  Lwt.return @@ page alert notice [ create_link; table ]
 ;;
 
 let new' req csrf (form : Rest.Form.t) =
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  let name_value, name_error = Rest.Form.find "name" form in
-  let vegan_value, _ = Rest.Form.find "is_vegan" form in
-  let price_value, price_error = Rest.Form.find "price" form in
-  let form = [%html \{\|
-{{form}}
-\|\}] in
-  Lwt.return
-  @@ Layout.page
-       None
-       [ alert_message alert; notice_message notice; form ]
+  let form =
+    [%html
+      {|
+<form action="/{{name}}s" method="Post">
+  <input type="hidden" name="_csrf" value="\|\}
+        csrf
+        {|">
+         \|\}
+        (form_comp form None)
+        {|
+  <div>
+    <input type="submit" value="Create">
+  </div>
+</form>
+\|\}]
+  in
+  Lwt.return @@ page alert notice [ form ]
 ;;
 
 let show req ({{name}} : {{module}}.t) =
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  let body = [%html "{{show}}"] in
-  Lwt.return
-  @@ Layout.page
-       None
-       [ alert_message alert; notice_message notice; body ]
+  let body = [%html {{show}}] in
+  Lwt.return @@ page alert notice [ body ]
 ;;
 
 let edit req csrf (form : Rest.Form.t) ({{name}} : {{module}}.t) =
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  {{form_values}}
-  let form = [%html \{\|
-{{form}}
-\|\}] in
-  Lwt.return
-  @@ Layout.page
-       None
-       [ alert_message alert; notice_message notice; form ]
+  let form =
+    [%html
+      {|
+<form action="\|\}
+        (Format.sprintf "/{{name}}s/%s" {{name}}.{{module}}.id)
+        {|" method="Post">
+  <input type="hidden" name="_csrf" value="\|\}
+        csrf
+        {|">
+  <input type="hidden" name="_method" value="put">\|\}
+        (form_comp form (Some {{name}}))
+        {|<input type="submit" value="Update">
+</form>
+\|\}]
+  in
+  Lwt.return @@ page alert notice [ form ]
 ;;
-
 |}
 ;;
 
+let new_params =
+  [ ( "form"
+    , {|
+  let checkbox =
+    if current_vegan || Option.equal String.equal old_vegan (Some "true")
+    then
+      [%html {|<input type="checkbox" name="is_vegan" value="true" checked>\|\}]
+    else [%html {|<input type="checkbox" name="is_vegan" value="true">\|\}]
+  in
+  [%html
+    {|
+  <div>
+    <span>Name</span>
+    <input name="name" value="\|\}
+      (Option.value ~default:current_name old_name)
+      {|">
+  </div>
+  <p class="alert">\|\}
+      [ Html.txt (Option.value ~default:"" name_error) ]
+      {|</p>
+  <div>
+    <label>Is it vegan?</label>\|\}
+      [ checkbox ]
+      {|
+    <input type="hidden" name="is_vegan" value="false">
+  </div>
+  <div>
+    <label>Price</label>
+    <input name="price" value="\|\}
+      (Option.value ~default:(string_of_int current_price) old_price)
+      {|">
+  </div>
+  <p class="alert">\|\}
+      [ Html.txt (Option.value ~default:"" price_error) ]
+      {|</p>
+  \|\}]
+|}
+    )
+  ]
+;;
+
 let unescape_template (t : string) : string =
-  t
-  |> CCString.replace ~sub:{|\{\||} ~by:"{|"
-  |> CCString.replace ~sub:{|\|\}|} ~by:"|}"
+  t |> CCString.replace ~sub:{|\|\}|} ~by:"|}"
 ;;
 
 let table_header (schema : Gen_core.schema) : string =
@@ -163,7 +245,7 @@ let stringify name module_ (field_name, type_) =
       field_name
 ;;
 
-let table_row name module_ (schema : Gen_core.schema) =
+let table_rows name module_ (schema : Gen_core.schema) =
   schema
   |> List.map ~f:(fun field ->
          Format.sprintf "\"<td>\"%s\"</td>\"" (stringify name module_ field))
@@ -175,93 +257,115 @@ let form_values schema =
   |> List.map ~f:fst
   |> List.map ~f:(fun name ->
          Format.sprintf
-           "let %s_value, %s_error = Rest.Form.find \"%s\" form in"
+           "let old_%s, %s_error = Rest.Form.find \"%s\" form in"
            name
            name
            name)
   |> String.concat ~sep:"\n"
 ;;
 
-let form_input name module_ (field_name, field_type) =
+let default_value type_ =
+  let open Gen_core in
+  match type_ with
+  | Float -> "0.0"
+  | Int -> "0"
+  | Bool -> "false"
+  | String -> "\"\""
+  | Datetime -> "(Ptime_clock.now ())"
+;;
+
+let default_values name module_ schema =
+  schema
+  |> List.map ~f:(fun (field_name, field_type) ->
+         Format.sprintf
+           {|
+  let current_%s =
+    %s
+    |> Option.map (fun (%s : %s.t) -> %s.%s.%s)
+    |> Option.value ~default:%s
+  in
+|}
+           field_name
+           name
+           name
+           module_
+           name
+           module_
+           field_name
+           (default_value field_type))
+  |> String.concat ~sep:"\n"
+;;
+
+let form_input name (field_name, field_type) =
   let open Gen_core in
   match field_type with
   | Float ->
     Format.sprintf
       {|<input name="%s" value="\|\}
-        (Option.value ~default:(string_of_float %s.%s.%s) %s)
-        \{\|">|}
+        (Option.value ~default:current_%s old_%s)
+        {|">|}
       name
-      name
-      module_
       field_name
-      name
+      field_name
   | Int ->
     Format.sprintf
       {|<input name="%s" value="\|\}
-        (Option.value ~default:(string_of_int %s.%s.%s) %s)
-        \{\|">|}
+        (Option.value ~default:(string_of_int current_%s) old_%s)
+        {|">|}
       name
-      name
-      module_
       field_name
-      name
+      field_name
   | Bool ->
+    (* TODO [jerben] fix checkbox *)
     Format.sprintf
       {|<input name="%s" value="\|\}
-        (Option.value ~default:(string_of_bool %s.%s.%s) %s)
-        \{\|">|}
+        (Option.value ~default:(string_of_bool current_%s) old_%s)
+        {|">|}
       name
-      name
-      module_
       field_name
-      name
+      field_name
   | String ->
     Format.sprintf
       {|<input name="%s" value="\|\}
-        (Option.value ~default:%s.%s.%s %s)
-        \{\|">|}
+        (Option.value ~default:current_%s old_%s)
+        {|">|}
       name
-      name
-      module_
       field_name
-      name
+      field_name
   | Datetime ->
     Format.sprintf
       {|<input name="%s" value="\|\}
-        (Option.value ~default:(Ptime.to_rfc3339 %s.%s.%s) %s)
-        \{\|">|}
+        (Option.value ~default:(Ptime.to_rfc3339 current_%s) old_%s)
+        {|">|}
       name
-      name
-      module_
       field_name
-      name
+      field_name
 ;;
 
-let form_elements name module_ schema =
+let alert (field_name, _) =
+  Format.sprintf
+    {|<p class="alert">\|\}
+      [ Html.txt (Option.value ~default:"" %s_error) ]
+  {|</p>|}
+    field_name
+;;
+
+let form_elements name schema =
   schema
   |> List.map ~f:(fun field ->
          Format.sprintf
-           "<label>{{name}}</label>%s"
-           (form_input name module_ field))
-  |> String.concat ~sep:"\n"
-  |> Format.sprintf "<div>%s</div>"
-;;
-
-let form name module_ schema =
-  {|
-<form action="\|\}
-    (Format.sprintf "/{{name}}/%s" {{name}}.{{module}}.id)
-    \{\|" method="Post">
-  <input type="hidden" name="_csrf" value="\|\}
-    csrf
-    \{\|">
-   |}
-  ^ form_elements name module_ schema
-  ^ {|
-  <input type="hidden" name="_method" value="put">
-  <input type="submit" value="Update">
-</form>
+           {|
+    <div>
+      <label>%s</label>
+      %s
+    </div>
+    %s
 |}
+           name
+           (form_input name field)
+           (alert field))
+  |> String.concat ~sep:"\n"
+  |> unescape_template
 ;;
 
 let show name module_ (schema : Gen_core.schema) =
@@ -272,7 +376,12 @@ let show name module_ (schema : Gen_core.schema) =
            name
            (stringify name module_ field))
   |> String.concat ~sep:"\n"
-  |> Format.sprintf "<div>%s [ edit_link {{name}}.{{module}}.id ]</div>"
+  |> fun fields ->
+  Format.sprintf
+    "\"<div>\"%s [ edit_link %s.%s.id ]\"</div>\""
+    fields
+    name
+    module_
 ;;
 
 let create_params name (schema : Gen_core.schema) =
@@ -280,9 +389,10 @@ let create_params name (schema : Gen_core.schema) =
   [ "module", module_
   ; "name", name
   ; "table_header", table_header schema
-  ; "table_row", table_row name module_ schema
+  ; "table_rows", table_rows name module_ schema
   ; "form_values", form_values schema
-  ; "form", form name module_ schema
+  ; "default_values", default_values name module_ schema
+  ; "form", form_elements name schema
   ; "show", show name module_ schema
   ]
 ;;
