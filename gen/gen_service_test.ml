@@ -71,8 +71,7 @@ let () =
 ;;
 
 let dune_file_template =
-  {|
-(test
+  {|(test
  (name test)
  (libraries sihl service database alcotest alcotest-lwt
    caqti-driver-postgresql {{name}}))

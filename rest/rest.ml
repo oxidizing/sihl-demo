@@ -57,7 +57,6 @@ module type SERVICE = sig
   val find : string -> t option Lwt.t
   val query : unit -> t list Lwt.t
   val insert : t -> (t, string) Result.t Lwt.t
-  val create : string -> bool -> int -> (t, string) result Lwt.t
   val update : string -> t -> (t, string) result Lwt.t
   val delete : t -> (unit, string) result Lwt.t
 end

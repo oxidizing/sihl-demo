@@ -133,9 +133,12 @@ let write_in_database (file : file) : unit =
   List.iter ~f:(fun file -> write_file file path) [ file ]
 ;;
 
-let write_in_view (file : file) : unit =
+let write_in_view (name : string) (files : file list) : unit =
   let root = Sihl.Configuration.root_path () |> Option.get in
-  let path = Format.sprintf "%s/web/view" root in
-  Bos.OS.Dir.create (Fpath.of_string path |> Result.get_ok) |> ignore;
-  List.iter ~f:(fun file -> write_file file path) [ file ]
+  let test_path = Format.sprintf "%s/web/view/%s" root name in
+  match Bos.OS.Dir.exists (Fpath.of_string test_path |> Result.get_ok) with
+  | Ok true -> failwith (Format.sprintf "View '%s' exists already" test_path)
+  | Ok false | Error _ ->
+    Bos.OS.Dir.create (Fpath.of_string test_path |> Result.get_ok) |> ignore;
+    List.iter ~f:(fun file -> write_file file test_path) files
 ;;

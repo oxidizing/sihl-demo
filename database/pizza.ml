@@ -89,7 +89,7 @@ let remove_timezone_pizzas_ingredients_table =
     |sql}
 ;;
 
-let pizzas =
+let migration =
   Sihl.Database.Migration.(
     empty "pizzas"
     |> add_step create_pizzas_table
@@ -100,5 +100,3 @@ let pizzas =
     |> add_step remove_timezone_ingredients_table
     |> add_step remove_timezone_pizzas_ingredients_table)
 ;;
-
-let all = [ pizzas ]

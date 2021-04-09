@@ -74,7 +74,12 @@ let form_comp form ({{name}} : {{module}}.t option) =
 
 (* Index *)
 
-let%html table_header = "{{table_header}}"
+let%html table_header = "<tr>
+  <th>Id</th>
+  {{table_header}}
+  <th>Created at</th>
+  <th>Updated at</th>
+</tr>"
 ;;
 
 let%html table_row csrf ({{name}} : {{module}}.t) =
@@ -162,45 +167,13 @@ let edit req csrf (form : Rest.Form.t) ({{name}} : {{module}}.t) =
 |}
 ;;
 
-let new_params =
-  [ ( "form"
-    , {|
-  let checkbox =
-    if current_vegan || Option.equal String.equal old_vegan (Some "true")
-    then
-      [%html {|<input type="checkbox" name="is_vegan" value="true" checked>\|\}]
-    else [%html {|<input type="checkbox" name="is_vegan" value="true">\|\}]
-  in
-  [%html
-    {|
-  <div>
-    <span>Name</span>
-    <input name="name" value="\|\}
-      (Option.value ~default:current_name old_name)
-      {|">
-  </div>
-  <p class="alert">\|\}
-      [ Html.txt (Option.value ~default:"" name_error) ]
-      {|</p>
-  <div>
-    <label>Is it vegan?</label>\|\}
-      [ checkbox ]
-      {|
-    <input type="hidden" name="is_vegan" value="false">
-  </div>
-  <div>
-    <label>Price</label>
-    <input name="price" value="\|\}
-      (Option.value ~default:(string_of_int current_price) old_price)
-      {|">
-  </div>
-  <p class="alert">\|\}
-      [ Html.txt (Option.value ~default:"" price_error) ]
-      {|</p>
-  \|\}]
+let dune_template =
+  {|(library
+ (name view_{{name}})
+ (libraries tyxml rest sihl service {{name}})
+ (preprocess
+  (pps tyxml-ppx)))
 |}
-    )
-  ]
 ;;
 
 let unescape_template (t : string) : string =
@@ -211,8 +184,7 @@ let table_header (schema : Gen_core.schema) : string =
   schema
   |> List.map ~f:fst
   |> List.map ~f:(Format.sprintf "<th>%s</th>")
-  |> String.concat ~sep:""
-  |> Format.sprintf "<tr>%s</tr>"
+  |> String.concat ~sep:"\n"
 ;;
 
 let stringify name module_ (field_name, type_) =
@@ -296,7 +268,7 @@ let default_values name module_ schema =
   |> String.concat ~sep:"\n"
 ;;
 
-let form_input name (field_name, field_type) =
+let form_input (field_name, field_type) =
   let open Gen_core in
   match field_type with
   | Float ->
@@ -304,7 +276,7 @@ let form_input name (field_name, field_type) =
       {|<input name="%s" value="\|\}
         (Option.value ~default:current_%s old_%s)
         {|">|}
-      name
+      field_name
       field_name
       field_name
   | Int ->
@@ -312,7 +284,7 @@ let form_input name (field_name, field_type) =
       {|<input name="%s" value="\|\}
         (Option.value ~default:(string_of_int current_%s) old_%s)
         {|">|}
-      name
+      field_name
       field_name
       field_name
   | Bool ->
@@ -321,7 +293,7 @@ let form_input name (field_name, field_type) =
       {|<input name="%s" value="\|\}
         (Option.value ~default:(string_of_bool current_%s) old_%s)
         {|">|}
-      name
+      field_name
       field_name
       field_name
   | String ->
@@ -329,15 +301,15 @@ let form_input name (field_name, field_type) =
       {|<input name="%s" value="\|\}
         (Option.value ~default:current_%s old_%s)
         {|">|}
-      name
+      field_name
       field_name
       field_name
   | Datetime ->
     Format.sprintf
-      {|<input name="%s" value="\|\}
+      {|<input type="date" name="%s" value="\|\}
         (Option.value ~default:(Ptime.to_rfc3339 current_%s) old_%s)
         {|">|}
-      name
+      field_name
       field_name
       field_name
 ;;
@@ -350,7 +322,7 @@ let alert (field_name, _) =
     field_name
 ;;
 
-let form_elements name schema =
+let form_elements schema =
   schema
   |> List.map ~f:(fun field ->
          Format.sprintf
@@ -361,8 +333,8 @@ let form_elements name schema =
     </div>
     %s
 |}
-           name
-           (form_input name field)
+           (fst field)
+           (form_input field)
            (alert field))
   |> String.concat ~sep:"\n"
   |> unescape_template
@@ -392,7 +364,7 @@ let create_params name (schema : Gen_core.schema) =
   ; "table_rows", table_rows name module_ schema
   ; "form_values", form_values schema
   ; "default_values", default_values name module_ schema
-  ; "form", form_elements name schema
+  ; "form", form_elements schema
   ; "show", show name module_ schema
   ]
 ;;
@@ -401,12 +373,16 @@ let generate (name : string) (schema : Gen_core.schema) =
   if String.contains name ':'
   then failwith "Invalid service name provided, it can not contain ':'"
   else (
+    let dune_file =
+      Gen_core.
+        { name = "dune"; template = dune_template; params = [ "name", name ] }
+    in
     let file =
       Gen_core.
-        { name = Format.sprintf "%ss.ml" name
+        { name = Format.sprintf "view_%s.ml" name
         ; template = unescape_template template
         ; params = create_params name schema
         }
     in
-    Gen_core.write_in_view file)
+    Gen_core.write_in_view name [ dune_file; file ])
 ;;

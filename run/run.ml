@@ -5,7 +5,10 @@
 
 let services =
   [ Sihl.Database.register ()
-  ; Service.Migration.(register ~migrations:Database.Pizza.all ())
+  ; Service.Migration.(
+      register
+        ~migrations:[ Database.Pizza.migration; Database.Pizza.migration ]
+        ())
   ; Sihl.Web.Http.register
       ~middlewares:Routes.global_middlewares
       (Sihl.Web.choose [ Routes.site_public; Routes.site_private_; Routes.api ])
