@@ -22,7 +22,8 @@ let router_private =
       ; post "/ingredients/:name/delete" Handler.Ingredients.delete
       ; get "/pizzas" Handler.Pizzas.index
       ; post "/pizzas" Handler.Pizzas.index
-      ; delete "/pizzas/:name" Handler.Pizzas.delete
+      ; get "/pizzas/:name" Handler.Pizzas.show
+      ; post "/pizzas/:name/delete" Handler.Pizzas.delete
       ]
 ;;
 
