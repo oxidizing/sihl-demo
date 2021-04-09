@@ -23,9 +23,16 @@ let%html page alert notice body =
   <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link href="/assets/reset.css" rel="stylesheet">
-      <link href="/assets/styles.css" rel="stylesheet">
-      <title>Hello world!</title>
+      <title>Pizza</title>
+  <style>
+    .alert {
+        color: red;
+    }
+
+    .notice {
+        color: green;
+    }
+  </style>
   </head>
     <body>|}
     [ alert_message alert ]
@@ -212,7 +219,7 @@ let edit req csrf (form : Rest.Form.t) (ingredient : Pizza.ingredient) =
         csrf
         {|">
   <input type="hidden" name="_method" value="put">|}
-        (form_comp form None)
+        (form_comp form (Some ingredient))
         {|<input type="submit" value="Update">
 </form>
 |}]

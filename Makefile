@@ -68,7 +68,7 @@ dev: ## Run the Sihl app, watch files and restart on change
 	dune build
 	if [ $$? -eq 0 ]
 	then
-		SIHL_ENV=development ./_build/default/run/run.exe start &
+		SIHL_ENV=development ./_build/default/run/run.exe server &
 	fi
 	echo
 	inotifywait -e modify -e move -e create -e delete -e attrib -r `pwd` --exclude "(_build|logs|Makefile|.devcontainer|.git)" -qq
