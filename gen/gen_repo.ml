@@ -41,8 +41,7 @@ let update_request =
     {sql|
 UPDATE {{table_name}} SET
   {{update_fields}},
-  created_at = $4,
-  updated_at = $5
+  updated_at = NOW()
 WHERE uuid = $1::uuid;
         |sql}
 ;;
@@ -166,7 +165,7 @@ let caqti_value name (schema : Gen_core.schema) =
   loop names
 ;;
 
-let destructued_fields (schema : Gen_core.schema) =
+let destructured_fields (schema : Gen_core.schema) =
   let rec loop = function
     | [ el1; el2 ] -> Format.sprintf "(%s, %s)" el1 el2
     | el1 :: rest -> Format.sprintf "(%s, %s)" el1 (loop rest)
@@ -201,7 +200,7 @@ let file (name : string) (schema : Gen_core.schema) =
     ; "table_name", Format.sprintf "%ss" name
     ; "caqti_type", caqti_type schema
     ; "caqti_value", caqti_value name schema
-    ; "destructured_fields", destructued_fields schema
+    ; "destructured_fields", destructured_fields schema
     ; "created_value", Gen_model.created_value schema
     ; "fields", fields schema
     ; "update_fields", update_fields schema

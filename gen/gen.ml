@@ -87,8 +87,8 @@ You should also run `make format` to apply your styling rules.
                module_
                module_
                module_
-               module_
                service_name
+               module_
                service_name
                service_name
                module_;

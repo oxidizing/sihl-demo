@@ -26,22 +26,23 @@ let%html page alert notice body =
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
       <title>{{module}}</title>
-  <style>
-    .alert {
+    {{style}}
+    <style>
+      .alert {
         color: red;
-    }
-
-    .notice {
+      }
+      .notice {
         color: green;
-    }
-  </style>
+      }
+    </style>
   </head>
     <body>\|\}
     [ alert_message alert ]
     [ notice_message notice ]
     body
     {|
-     </body>
+    {{scripts}}
+  </body>
 </html>
 \|\}
 ;;
@@ -246,6 +247,33 @@ let default_value type_ =
   | Datetime -> "(Ptime_clock.now ())"
 ;;
 
+let checkbox field_name field_type =
+  let open Gen_core in
+  match field_type with
+  | Bool ->
+    Format.sprintf
+      {|
+  let %s =
+    if current_%s || Option.equal String.equal old_%s (Some "true")
+    then [|}
+      field_name
+      field_name
+      field_name
+    ^ "%h"
+    ^ Format.sprintf
+        {|tml {|<input type="checkbox" name="%s" value="true" checked>\|\}]
+    else [|}
+        field_name
+    ^ "%h"
+    ^ Format.sprintf
+        {|tml {|<input type="checkbox" name="%s" value="true">\|\}]
+  in
+|}
+        field_name
+    |> unescape_template
+  | Float | Int | String | Datetime -> ""
+;;
+
 let default_values name module_ schema =
   schema
   |> List.map ~f:(fun (field_name, field_type) ->
@@ -256,6 +284,7 @@ let default_values name module_ schema =
     |> Option.map (fun (%s : %s.t) -> %s.%s.%s)
     |> Option.value ~default:%s
   in
+  %s
 |}
            field_name
            name
@@ -264,7 +293,8 @@ let default_values name module_ schema =
            name
            module_
            field_name
-           (default_value field_type))
+           (default_value field_type)
+           (checkbox field_name field_type))
   |> String.concat ~sep:"\n"
 ;;
 
@@ -288,14 +318,13 @@ let form_input (field_name, field_type) =
       field_name
       field_name
   | Bool ->
-    (* TODO [jerben] fix checkbox *)
     Format.sprintf
-      {|<input name="%s" value="\|\}
-        (Option.value ~default:(string_of_bool current_%s) old_%s)
-        {|">|}
+      {|\|\} [ %s ] {|
+<input type="hidden" name="%s" value="false">
+|}
       field_name
       field_name
-      field_name
+    |> unescape_template
   | String ->
     Format.sprintf
       {|<input name="%s" value="\|\}
@@ -306,7 +335,9 @@ let form_input (field_name, field_type) =
       field_name
   | Datetime ->
     Format.sprintf
-      {|<input type="date" name="%s" value="\|\}
+      {|<input class="datetime" type="datetime-local" name="%s" value="\|\}
+    (* Not that datetime-local is not yet supported by many browsers. You might
+       want to use some datepicker library *)
         (Option.value ~default:(Ptime.to_rfc3339 current_%s) old_%s)
         {|">|}
       field_name
@@ -356,6 +387,37 @@ let show name module_ (schema : Gen_core.schema) =
     module_
 ;;
 
+let has_datetime schema =
+  let open Gen_core in
+  schema
+  |> List.map ~f:snd
+  |> List.find_opt ~f:(function
+         | Datetime -> true
+         | Int | Float | String | Bool -> false)
+  |> Option.map (fun _ -> true)
+  |> Option.value ~default:false
+;;
+
+let scripts (schema : Gen_core.schema) =
+  if has_datetime schema
+  then
+    {|<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>\|\}
+    (Tyxml.Html.Unsafe.data
+       {|(function() { $( ".datetime" ).flatpickr({enableTime:true, dateFormat:"Z"}); })();\|\})
+   {|</script>|}
+    |> unescape_template
+  else ""
+;;
+
+let style (schema : Gen_core.schema) =
+  if has_datetime schema
+  then
+    {|<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">|}
+  else ""
+;;
+
 let create_params name (schema : Gen_core.schema) =
   let module_ = CCString.capitalize_ascii name in
   [ "module", module_
@@ -366,6 +428,8 @@ let create_params name (schema : Gen_core.schema) =
   ; "default_values", default_values name module_ schema
   ; "form", form_elements schema
   ; "show", show name module_ schema
+  ; "scripts", scripts schema
+  ; "style", style schema
   ]
 ;;
 

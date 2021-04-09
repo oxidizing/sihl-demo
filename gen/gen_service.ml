@@ -33,10 +33,11 @@ let create {{create_args}} : (t, string) Result.t Lwt.t =
   insert @@ create {{create_args}}
  ;;
 
-let update _ ({{name}} : t) =
+let update id ({{name}} : t) =
   let open Lwt.Syntax in
+  let {{name}} = { {{name}} with id } in
   let* () = Repo.update {{name}} in
-  let* updated = Repo.find {{name}}.id in
+  let* updated = find id in
   match updated with
   | Some updated -> Lwt.return (Ok updated)
   | None -> Lwt.return @@ Error "Failed to update {{name}}"
