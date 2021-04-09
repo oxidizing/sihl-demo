@@ -29,12 +29,21 @@ let index user ~alert ~notice csrf (pizzas : Pizza.t list) =
   let list_items =
     List.map
       ~f:(fun (pizza : Pizza.t) ->
+        let ingredients_list =
+          List.map
+            ~f:(fun (ingredient : string) ->
+              [%html {|<li>|} [ Html.txt ingredient ] {|</li>|}])
+            pizza.Pizza.ingredients
+        in
+        let ingredients = [%html {|<ul>|} ingredients_list {|</ul>|}] in
         [%html
           {|<tr><td><a href="|}
             (Format.sprintf "/pizzas/%s" pizza.Pizza.name)
             {|">|}
             [ Html.txt pizza.Pizza.name ]
             {|</a></td><td>|}
+            [ ingredients ]
+            {|</td><td>|}
             [ Html.txt (Ptime.to_rfc3339 pizza.Pizza.created_at) ]
             {|</td><td>|}
             [ Html.txt (Ptime.to_rfc3339 pizza.Pizza.updated_at) ]
@@ -60,19 +69,10 @@ let index user ~alert ~notice csrf (pizzas : Pizza.t list) =
     [ alert_message; notice_message; create_form csrf; pizzas ]
 ;;
 
-let show user ~alert ~notice csrf (pizza : Pizza.t) =
+let show user ~alert ~notice (pizza : Pizza.t) =
   let item =
     [%html
-      {|<div>|}
-        {|<h1>|}
-        [ Html.txt pizza.Pizza.name ]
-        {|</h1>|}
-        {|<div>|}
-        {|<a href="/pizzas">|}
-        "back"
-        {|</a>|}
-        {|</div>|}
-        {|</div>|}]
+      {|<div>|} {|<h1>|} [ Html.txt pizza.Pizza.name ] {|</h1>|} {|</div>|}]
   in
   let ingredients_list =
     List.map
@@ -81,6 +81,9 @@ let show user ~alert ~notice csrf (pizza : Pizza.t) =
       pizza.Pizza.ingredients
   in
   let ingredients = [%html {|<ul>|} ingredients_list {|</ul>|}] in
+  let back_button =
+    [%html {|<div><br /><a href="/pizzas">|} "back" {|</a></div>|}]
+  in
   let alert_message =
     [%html {|<span>|} [ Html.txt (Option.value alert ~default:"") ] {|</span>|}]
   in
@@ -90,5 +93,5 @@ let show user ~alert ~notice csrf (pizza : Pizza.t) =
   in
   Layout.page
     (Some user)
-    [ alert_message; notice_message; create_form csrf; item; ingredients ]
+    [ alert_message; notice_message; item; ingredients; back_button ]
 ;;
