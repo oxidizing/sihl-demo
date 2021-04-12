@@ -36,7 +36,8 @@ let find_ingredients _ () =
   let* _ = Pizza.Ingredient.create "ham" true 4 in
   let* _ = Pizza.Ingredient.create "tomato" true 2 in
   let* (ingredients : string list) =
-    Pizza.Ingredient.query ()
+    Pizza.Ingredient.search ()
+    |> Lwt.map fst
     |> Lwt.map
          (List.map ~f:(fun (ingredient : Pizza.ingredient) ->
               ingredient.Pizza.name))
@@ -104,7 +105,8 @@ let find_pizzas _ () =
   let* _ = Pizza.create_pizza "boring" [] in
   let* _ = Pizza.create_pizza "proscioutto" [ "ham"; "tomato" ] in
   let* (ingredients : string list) =
-    Pizza.Ingredient.query ()
+    Pizza.Ingredient.search ()
+    |> Lwt.map fst
     |> Lwt.map
          (List.map ~f:(fun (ingredient : Pizza.ingredient) ->
               ingredient.Pizza.name))

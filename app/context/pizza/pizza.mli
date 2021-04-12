@@ -26,7 +26,15 @@ module Ingredient : sig
   type t = ingredient
 
   val find : string -> t option Lwt.t
-  val query : unit -> t list Lwt.t
+
+  val search
+    :  ?filter:string
+    -> ?sort:[ `Desc | `Asc ]
+    -> ?limit:int
+    -> ?offset:int
+    -> unit
+    -> (t list * int) Lwt.t
+
   val create : string -> bool -> int -> (t, string) result Lwt.t
   val insert : t -> (t, string) result Lwt.t
   val update : string -> t -> (t, string) result Lwt.t

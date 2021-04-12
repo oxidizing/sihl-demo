@@ -15,3 +15,5 @@ let order_ingredient =
     (fun s -> Ok s)
     "order-ingredient"
 ;;
+
+let all = [ Sihl_queue.hide cook_pizza; Sihl_queue.hide order_ingredient ]
