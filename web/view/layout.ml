@@ -38,6 +38,7 @@ let%html page user body =
   </head>
     <body>|}
     [ navigation user ]
+    {|<br>|}
     body
     {|
      </body>

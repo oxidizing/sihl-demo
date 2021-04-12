@@ -6,8 +6,14 @@ let%html login_form csrf =
   <input type="hidden" name="_csrf" value="|}
     csrf
     {|">
-  <input name="email">
-  <input name="password">
+  <div>
+    <label>Email</label>
+    <input name="email">
+  </div>
+  <div>
+    <label>Password</label>
+    <input name="password">
+  </div>
   <input type="submit" value="Login">
 </form>
 |}
@@ -26,9 +32,18 @@ let%html registration_form csrf =
   <input type="hidden" name="_csrf" value="|}
     csrf
     {|">
-  <input name="email">
-  <input name="password">
-  <input name="password_confirmation">
+  <div>
+    <label>Email</label>
+    <input name="email">
+  </div>
+  <div>
+    <label>Password</label>
+    <input name="password">
+  </div>
+  <div>
+    <label>Confirm pasword</label>
+    <input name="password_confirmation">
+  </div>
   <input type="submit" value="Register">
 </form>
 |}
