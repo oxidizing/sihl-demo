@@ -38,11 +38,14 @@ let private_middlewares =
 let site_private_ =
   Sihl.Web.choose
     ~middlewares:private_middlewares
-    (Rest.resource
+    (Sihl.Web.Rest.resource_of_service
        "ingredients"
        Pizza.ingredient_schema
-       (module Pizza.Ingredient : Rest.SERVICE with type t = Pizza.ingredient)
-       (module View.Ingredients : Rest.VIEW with type t = Pizza.ingredient))
+       ~view:
+         (module View.Ingredients : Sihl.Web.Rest.VIEW
+           with type t = Pizza.ingredient)
+       (module Pizza.Ingredient : Sihl.Web.Rest.SERVICE
+         with type t = Pizza.ingredient))
 ;;
 
 let api = Sihl.Web.choose ~scope:"/api" []

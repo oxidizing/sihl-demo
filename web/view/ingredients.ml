@@ -81,14 +81,14 @@ let index req csrf (ingredients : Pizza.ingredient list) =
        [ alert_message alert; notice_message notice; create_link; ingredients ]
 ;;
 
-let new' req csrf (form : Rest.Form.t) =
+let new' req csrf (form : Sihl.Web.Rest.form) =
   let open Lwt.Syntax in
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
-  let name_value, name_error = Rest.Form.find "name" form in
-  let vegan_value, _ = Rest.Form.find "is_vegan" form in
-  let price_value, price_error = Rest.Form.find "price" form in
+  let name_value, name_error = Sihl.Web.Rest.find_form "name" form in
+  let vegan_value, _ = Sihl.Web.Rest.find_form "is_vegan" form in
+  let price_value, price_error = Sihl.Web.Rest.find_form "price" form in
   let checkbox =
     if Option.bind vegan_value bool_of_string_opt |> Option.value ~default:false
     then
@@ -164,14 +164,14 @@ let show req (ingredient : Pizza.ingredient) =
        [ alert_message alert; notice_message notice; body ]
 ;;
 
-let edit req csrf (form : Rest.Form.t) (ingredient : Pizza.ingredient) =
+let edit req csrf (form : Sihl.Web.Rest.form) (ingredient : Pizza.ingredient) =
   let open Lwt.Syntax in
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in
-  let name, name_error = Rest.Form.find "name" form in
-  let vegan, _ = Rest.Form.find "is_vegan" form in
-  let price_value, price_error = Rest.Form.find "price" form in
+  let name, name_error = Sihl.Web.Rest.find_form "name" form in
+  let vegan, _ = Sihl.Web.Rest.find_form "is_vegan" form in
+  let price_value, price_error = Sihl.Web.Rest.find_form "price" form in
   let checkbox =
     if ingredient.Pizza.is_vegan
        || Option.equal String.equal vegan (Some "true")

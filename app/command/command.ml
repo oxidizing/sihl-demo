@@ -2,7 +2,7 @@ let create_pizza =
   Sihl.Command.make
     ~name:"pizza.create"
     ~help:"<pizza name> <ingredient1> <ingredient2> ..."
-    ~description:"Create a pizza"
+    ~description:"Creates a pizza immediately."
     (fun args ->
       match args with
       | name :: ingredients ->
@@ -12,7 +12,7 @@ let create_pizza =
       | _ ->
         raise
           (Sihl.Command.Exception
-             "Usage: <pizza name> <ingredient1> <ingredient2> ..."))
+             "Usage: <pizza name> <ingredient1> <ingredient2>"))
 ;;
 
 let cook_pizza =
@@ -46,3 +46,5 @@ let order_ingredient =
         |> Lwt.map Option.some
       | _ -> Lwt.return None)
 ;;
+
+let all = [ create_pizza; cook_pizza; order_ingredient ]

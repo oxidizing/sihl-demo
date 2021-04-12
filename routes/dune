@@ -1,3 +1,3 @@
 (library
  (name routes)
- (libraries sihl rest view handler middleware))
+ (libraries sihl view handler middleware))

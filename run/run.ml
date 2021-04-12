@@ -26,12 +26,6 @@ let () =
     |> with_services services
     |> run
          ~commands:
-           [ Command.create_pizza
-           ; Command.cook_pizza
-           ; Command.order_ingredient
-           ; Gen.service
-           ; Gen.view
-           ; Gen.html
-           ; Gen.json
-           ])
+           (List.concat
+              [ Command.all; [ Gen.service; Gen.view; Gen.html; Gen.json ] ]))
 ;;
