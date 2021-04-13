@@ -50,7 +50,7 @@ let create_pizza name (ingredients : string list) : t Lwt.t =
   | Some pizza -> Lwt.return pizza
   | None ->
     Logs.err (fun m -> m "Failed to create pizza '%s'" name);
-    raise @@ Exception "Failed to create pizza"
+    raise @@ Exception "Failed to\n   create pizza"
 ;;
 
 let find_pizza name = Repo.find_pizza name

@@ -6,7 +6,9 @@ let%html create_form csrf =
   <input type="hidden" name="_csrf" value="|}
     csrf
     {|">
-  <input name="name">
+  <input name="name"><br />
+  <input name="ingredients">
+  <span>Please insert the ingredients comma separated</span>
   <input type="submit" value="Create">
 </form>
 |}
@@ -80,7 +82,15 @@ let show user ~alert ~notice (pizza : Pizza.t) =
         [%html {|<li>|} [ Html.txt ingredient ] {|</li>|}])
       pizza.Pizza.ingredients
   in
-  let ingredients = [%html {|<ul>|} ingredients_list {|</ul>|}] in
+  let ingredients =
+    [%html
+      {|<div><h2>|}
+        "Ingredients:"
+        {|</h2>|}
+        {|<ul>|}
+        ingredients_list
+        {|</ul></div>|}]
+  in
   let back_button =
     [%html {|<div><br /><a href="/pizzas">|} "back" {|</a></div>|}]
   in

@@ -27,7 +27,50 @@ let show req =
     @@ Sihl.Web.Response.of_html (View.Pizzas.show user ~alert ~notice pizza)
 ;;
 
-let create _ = failwith "todo pizza create"
+(* let create _ = failwith "todo pizza create" *)
+
+let create req =
+  let open Lwt.Syntax in
+  let* name = Sihl.Web.Request.urlencoded "name" req in
+  match name with
+  | None ->
+    Sihl.Web.Response.redirect_to "/pizzas"
+    |> Sihl.Web.Flash.set_alert "Invalid input provided"
+    |> Lwt.return
+  | Some name ->
+    let* ingredients = Sihl.Web.Request.urlencoded "ingredients" req in
+    (match ingredients with
+    (* How to deal with None? *)
+    (* | None -> [] *)
+    (* | [] -> [] *)
+    | None ->
+      Sihl.Web.Response.redirect_to "/pizzas"
+      |> Sihl.Web.Flash.set_notice (Format.sprintf "Something went wrong")
+      |> Lwt.return
+    | Some ingredients ->
+      if String.length ingredients < 1
+      then
+        Sihl.Web.Response.redirect_to "/pizzas"
+        |> Sihl.Web.Flash.set_notice
+             (Format.sprintf "What a boring pizza, please add some ingredients")
+        |> Lwt.return
+      else (
+        let ingredients = Stringext.split ~on:',' ingredients in
+        (* let ingredients_list = List.map ~f:(fun (ingredient : string) ->
+           String.trim ingredient) ingredients in *)
+        let open Containers in
+        let ingredients_list = CCList.map String.trim ingredients in
+        let* pizza = Pizza.create_pizza name ingredients_list in
+        match pizza with
+        | pizza ->
+          Sihl.Web.Response.redirect_to "/pizzas"
+          |> Sihl.Web.Flash.set_notice
+               (Format.sprintf "Pizza '%s' added" pizza.Pizza.name)
+          |> Lwt.return
+        (* How to deal with errors - see ingredients ( | Ok ingredient )*)
+        (* | _ -> Sihl.Web.Response.redirect_to "/ingredients" |>
+           Sihl.Web.Flash.set_alert "An error occurred" |> Lwt.return*)))
+;;
 
 let delete req =
   let open Lwt.Syntax in

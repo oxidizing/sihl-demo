@@ -202,11 +202,16 @@ let find_pizzas () : Model.t list Lwt.t =
         let module Connection = (val connection : Caqti_lwt.CONNECTION) in
         Connection.collect_list find_pizzas_request ())
   in
-  List.map
-    ~f:(fun (name, created_at, updated_at) ->
-      Model.{ name; ingredients = []; created_at; updated_at })
+  Lwt_list.map_p
+    (fun (name, created_at, updated_at) ->
+      let* ingredients = find_ingredients_of_pizza name in
+      let ingredients =
+        List.map
+          ~f:(fun (ingredient : Model.ingredient) -> ingredient.Model.name)
+          ingredients
+      in
+      Lwt.return Model.{ name; ingredients; created_at; updated_at })
     pizzas
-  |> Lwt.return
 ;;
 
 let insert_pizza_request =
