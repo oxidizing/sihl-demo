@@ -40,9 +40,6 @@ let create req =
   | Some name ->
     let* ingredients = Sihl.Web.Request.urlencoded "ingredients" req in
     (match ingredients with
-    (* How to deal with None? *)
-    (* | None -> [] *)
-    (* | [] -> [] *)
     | None ->
       Sihl.Web.Response.redirect_to "/pizzas"
       |> Sihl.Web.Flash.set_notice (Format.sprintf "Something went wrong")
@@ -50,14 +47,13 @@ let create req =
     | Some ingredients ->
       if String.length ingredients < 1
       then
+        (* Skip redirect, pass pizza name? *)
         Sihl.Web.Response.redirect_to "/pizzas"
         |> Sihl.Web.Flash.set_notice
              (Format.sprintf "What a boring pizza, please add some ingredients")
         |> Lwt.return
       else (
         let ingredients = Stringext.split ~on:',' ingredients in
-        (* let ingredients_list = List.map ~f:(fun (ingredient : string) ->
-           String.trim ingredient) ingredients in *)
         let open Containers in
         let ingredients_list = CCList.map String.trim ingredients in
         let* pizza = Pizza.create_pizza name ingredients_list in
