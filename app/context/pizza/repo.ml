@@ -244,32 +244,6 @@ let insert_pizza_ingredient_request =
     |sql}
 ;;
 
-(* let insert_pizza (pizza : Model.t) (ingredients : string list) = let open
-   Lwt_result.Syntax in Sihl.Database.transaction' (fun connection -> let module
-   Connection = (val connection : Caqti_lwt.CONNECTION) in let* () =
-   Connection.exec insert_pizza_request (pizza.Model.name,
-   pizza.Model.created_at, pizza.Model.updated_at) in (* let open Lwt.Syntax in
-   *) let ingredients = Lwt_list.map_p (fun name -> let* ingredient =
-   find_ingredient name in match ingredient with | Some ingredient ->
-   Lwt_result.return ingredient | None -> let* ingredient = create_ingredient
-   name in Lwt_result.return ingredient) ingredients in let ingredients =
-   List.map ~f:(fun (ingredient : Model.ingredient) -> ingredient.Model.name)
-   ingredients in (* let* () = Lwt_list.map_p (fun name -> let* ingredient =
-   find_ingredients name in match ingredient with | None -> let* () =
-   Connection.exec insert_ingredient_request name in Lwt.return name | _ -> ())
-   in *) List.fold_left ~f:(fun result ingredient -> let* () = result in
-   Connection.exec insert_pizza_ingredient_request (pizza.Model.name,
-   ingredient)) ~init:(Lwt_result.return ()) ingredients) ;; *)
-
-(* | None -> let ingredient = create_ingredient name in let* () =
-   Repo.insert_ingredient ingredient in Lwt.return ingredient.name *)
-
-(* | None -> let ingredient = create_ingredient name in let* () =
-   insert_ingredient ingredient in let* ingredient = find_ingredient name in
-   Lwt.return ingredient.name *)
-(* | None -> let* ingredient = create_ingredient name in let* () = result in
-   Connection.exec insert_ingredient ingredient ~init:(Lwt_result.return ()) *)
-
 let insert_pizza (pizza : Model.t) (ingredients : string list) =
   let open Lwt_result.Syntax in
   Sihl.Database.transaction' (fun connection ->

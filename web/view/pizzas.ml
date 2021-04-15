@@ -64,9 +64,7 @@ let index user ~alert ~notice csrf (pizzas : Pizza.t list) =
   let list_header = [%html {|<tr></tr>|}] in
   let pizzas =
     [%html
-      {|<table class="table-striped"><tbody>|}
-        (List.cons list_header list_items)
-        {|</tbody></table>|}]
+      {|<table><tbody>|} (List.cons list_header list_items) {|</tbody></table>|}]
   in
   Layout.page
     (Some user)

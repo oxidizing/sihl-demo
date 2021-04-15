@@ -5,28 +5,24 @@ let navigation user =
   | None ->
     [%html
       {|
-      <header>
-<ul class="nav">
+<ul>
   <li><a href="/login">Login</a></li>
   <li><a href="/registration">Registration</a></li>
-</ul></header>
+</ul>
 |}]
   | Some user ->
     [%html
       {|
-<header>
-  <div>|}
+<ul>
+  <li>|}
         [ Html.txt (Format.sprintf "Welcome %s!" user.Sihl.Contract.User.email)
         ]
-        {|
-  </div>
-  <ul class="nav">
-    <li><a href="/ingredients">Ingredients</a></li>
-    <li><a href="/pizzas">Pizzas</a></li>
-    <li><a href="/admin/queue">Queue Dashboard</a></li>
-    <li><a href="/logout">Logout</a></li>
-  </ul>
-</header>|}]
+        {|</li>
+  <li><a href="/ingredients">Ingredients</a></li>
+  <li><a href="/pizzas">Pizzas</a></li>
+  <li><a href="/admin/queue">Queue Dashboard</a></li>
+  <li><a href="/logout">Logout</a></li>
+</ul>|}]
 ;;
 
 let%html page user body =
@@ -42,11 +38,9 @@ let%html page user body =
   </head>
     <body>|}
     [ navigation user ]
-    {|<main>|}
     body
     {|
-      </main>
-      </body>
+     </body>
 </html>
 |}
 ;;
