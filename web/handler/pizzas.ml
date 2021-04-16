@@ -42,7 +42,7 @@ let create req =
     then
       Sihl.Web.Response.redirect_to "/pizzas"
       |> Sihl.Web.Flash.set_notice
-           (Format.sprintf "What a boring pizza, please add some ingredients")
+           (Format.sprintf "Please select at least one ingredient")
       |> Lwt.return
     else
       let* pizza = Pizza.create_pizza name ingredients in
