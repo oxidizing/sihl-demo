@@ -253,14 +253,6 @@ let insert_pizza (pizza : Model.t) (ingredients : string list) =
           insert_pizza_request
           (pizza.Model.name, pizza.Model.created_at, pizza.Model.updated_at)
       in
-      let* () =
-        Connection.populate
-          ~table:"ingredients"
-          ~columns:[ "name" ]
-          Caqti_type.string
-          (Caqti_lwt.Stream.of_list ingredients)
-        |> Lwt.map Caqti_error.uncongested
-      in
       List.fold_left
         ~f:(fun result ingredient ->
           let* () = result in

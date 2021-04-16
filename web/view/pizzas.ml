@@ -1,17 +1,34 @@
 open Tyxml
 
-let%html create_form csrf =
-  {|
+let create_form csrf ingredients =
+  let ingredients_options =
+    List.map
+      ~f:(fun (ingredient : Pizza.ingredient) ->
+        [%html
+          {|<option value="|}
+            ingredient.Pizza.name
+            {|">|}
+            (Html.txt ingredient.Pizza.name)
+            {|</option>|}])
+      ingredients
+  in
+  let%html form =
+    {|
 <form action="/pizzas" method="Post">
   <input type="hidden" name="_csrf" value="|}
-    csrf
-    {|">
+      csrf
+      {|">
   <input name="name"><br />
-  <input name="ingredients">
-  <span>Please insert the ingredients comma separated</span>
-  <input type="submit" value="Create">
+  <select name="ingredients" multiple>
+      |}
+      ingredients_options
+      {|
+    </select>
+    <input type="submit" value="Create">
 </form>
 |}
+  in
+  form
 ;;
 
 let%html delete_button (pizza : Pizza.t) csrf =
@@ -27,7 +44,14 @@ let%html delete_button (pizza : Pizza.t) csrf =
 |}
 ;;
 
-let index user ~alert ~notice csrf (pizzas : Pizza.t list) =
+let index
+    user
+    ~alert
+    ~notice
+    csrf
+    (pizzas : Pizza.t list)
+    (ingredients : Pizza.ingredient list)
+  =
   let list_items =
     List.map
       ~f:(fun (pizza : Pizza.t) ->
@@ -68,7 +92,7 @@ let index user ~alert ~notice csrf (pizzas : Pizza.t list) =
   in
   Layout.page
     (Some user)
-    [ alert_message; notice_message; create_form csrf; pizzas ]
+    [ alert_message; notice_message; create_form csrf ingredients; pizzas ]
 ;;
 
 let show user ~alert ~notice (pizza : Pizza.t) =

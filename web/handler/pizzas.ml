@@ -5,9 +5,10 @@ let index req =
   let notice = Sihl.Web.Flash.find_notice req in
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let* pizzas = Pizza.find_pizzas () in
+  let* ingredients = Pizza.find_ingredients () in
   Lwt.return
   @@ Sihl.Web.Response.of_html
-       (View.Pizzas.index user ~alert ~notice csrf pizzas)
+       (View.Pizzas.index user ~alert ~notice csrf pizzas ingredients)
 ;;
 
 let show req =
@@ -27,8 +28,6 @@ let show req =
     @@ Sihl.Web.Response.of_html (View.Pizzas.show user ~alert ~notice pizza)
 ;;
 
-(* let create _ = failwith "todo pizza create" *)
-
 let create req =
   let open Lwt.Syntax in
   let* name = Sihl.Web.Request.urlencoded "name" req in
@@ -38,34 +37,21 @@ let create req =
     |> Sihl.Web.Flash.set_alert "Invalid input provided"
     |> Lwt.return
   | Some name ->
-    let* ingredients = Sihl.Web.Request.urlencoded "ingredients" req in
-    (match ingredients with
-    | None ->
+    let* ingredients = Sihl.Web.Request.urlencoded_list "ingredients" req in
+    if List.length ingredients < 1
+    then
       Sihl.Web.Response.redirect_to "/pizzas"
-      |> Sihl.Web.Flash.set_notice (Format.sprintf "Something went wrong")
+      |> Sihl.Web.Flash.set_notice
+           (Format.sprintf "What a boring pizza, please add some ingredients")
       |> Lwt.return
-    | Some ingredients ->
-      if String.length ingredients < 1
-      then
-        (* Skip redirect, pass pizza name? *)
+    else
+      let* pizza = Pizza.create_pizza name ingredients in
+      (match pizza with
+      | pizza ->
         Sihl.Web.Response.redirect_to "/pizzas"
         |> Sihl.Web.Flash.set_notice
-             (Format.sprintf "What a boring pizza, please add some ingredients")
-        |> Lwt.return
-      else (
-        let ingredients = Stringext.split ~on:',' ingredients in
-        let open Containers in
-        let ingredients_list = CCList.map String.trim ingredients in
-        let* pizza = Pizza.create_pizza name ingredients_list in
-        match pizza with
-        | pizza ->
-          Sihl.Web.Response.redirect_to "/pizzas"
-          |> Sihl.Web.Flash.set_notice
-               (Format.sprintf "Pizza '%s' added" pizza.Pizza.name)
-          |> Lwt.return
-        (* How to deal with errors - see ingredients ( | Ok ingredient )*)
-        (* | _ -> Sihl.Web.Response.redirect_to "/ingredients" |>
-           Sihl.Web.Flash.set_alert "An error occurred" |> Lwt.return*)))
+             (Format.sprintf "Pizza '%s' added" pizza.Pizza.name)
+        |> Lwt.return)
 ;;
 
 let delete req =
