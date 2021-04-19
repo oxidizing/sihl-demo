@@ -85,11 +85,7 @@ let index
     [%html
       {|<span>|} [ Html.txt (Option.value notice ~default:"") ] {|</span>|}]
   in
-  let list_header = [%html {|<tr></tr>|}] in
-  let pizzas =
-    [%html
-      {|<table><tbody>|} (List.cons list_header list_items) {|</tbody></table>|}]
-  in
+  let pizzas = [%html {|<table><tbody>|} list_items {|</tbody></table>|}] in
   Layout.page
     (Some user)
     [ alert_message; notice_message; create_form csrf ingredients; pizzas ]
