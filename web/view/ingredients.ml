@@ -2,6 +2,8 @@ open Tyxml
 
 type t = Pizza.ingredient
 
+let skip_index_fetch = false
+
 let%html delete_button (ingredient : Pizza.ingredient) csrf =
   {|
 <form action="|}
@@ -42,8 +44,14 @@ let notice_message notice =
       {|</span>|}]
 ;;
 
-let index req csrf (ingredients : Pizza.ingredient list) =
+let index
+    req
+    csrf
+    (result : Pizza.ingredient list * int)
+    (_ : Sihl.Web.Rest.query)
+  =
   let open Lwt.Syntax in
+  let ingredients, _ = result in
   let* user = Service.User.Web.user_from_session req |> Lwt.map Option.get in
   let notice = Sihl.Web.Flash.find_notice req in
   let alert = Sihl.Web.Flash.find_alert req in

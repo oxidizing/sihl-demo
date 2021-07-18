@@ -35,7 +35,7 @@ let private_middlewares =
   List.concat [ site_middlewares; [ Middleware.Authn.middleware "/login" ] ]
 ;;
 
-let site_private_ =
+let site_private =
   Sihl.Web.choose
     ~middlewares:private_middlewares
     (Sihl.Web.Rest.resource_of_service
@@ -48,4 +48,11 @@ let site_private_ =
          with type t = Pizza.ingredient))
 ;;
 
+let router_admin_queue =
+  Sihl.Web.choose
+    ~middlewares:[ Middleware.Authn.middleware "/login" ]
+    [ Service.Queue.router ~back:"/" "/admin/queue" ]
+;;
+
 let api = Sihl.Web.choose ~scope:"/api" []
+let all = Sihl.Web.choose [ site_public; site_private; api; router_admin_queue ]
