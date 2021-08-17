@@ -16,7 +16,10 @@ module Ingredient = struct
   type t = ingredient
 
   let find name = Repo.find_ingredient name
-  let query = Repo.find_ingredients
+
+  let search ?filter:_ ?sort:_ ?limit:_ ?offset:_ () =
+    Repo.find_ingredients () |> Lwt.map (fun v -> v, 0)
+  ;;
 
   let insert (ingredient : ingredient) =
     let open Lwt.Syntax in

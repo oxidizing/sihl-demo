@@ -5,15 +5,10 @@
 
 let services =
   [ Sihl.Database.register ()
-  ; Service.Migration.(register ~migrations:Database.Migration.all ())
-  ; Sihl.Web.Http.register
-      ~middlewares:Routes.global_middlewares
-      (Sihl.Web.choose [ Routes.site_public; Routes.site_private_; Routes.api ])
+  ; Service.Migration.register [ Database.Pizza.migration ]
+  ; Sihl.Web.Http.register ~middlewares:Routes.global_middlewares Routes.all
   ; Service.User.register ()
-  ; Service.Queue.register
-      ~jobs:
-        [ Sihl_queue.hide Job.cook_pizza; Sihl_queue.hide Job.order_ingredient ]
-      ()
+  ; Service.Queue.register ~jobs:Job.all ()
   ]
 ;;
 
