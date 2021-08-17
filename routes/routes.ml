@@ -1,7 +1,8 @@
 (* All the HTML HTTP entry points are listed in this file.
 
    Don't put actual logic here and keep the routes declarative and easy to read.
-   The overall scope of the web app should be clear after scanning the routes. *)
+   The overall scope of the web app should be clear after scanning the
+   routes. *)
 
 let global_middlewares =
   [ Sihl.Web.Middleware.id ()
