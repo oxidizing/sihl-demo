@@ -14,7 +14,7 @@ let login_create req =
   let* urlencoded = Sihl.Web.Request.to_urlencoded req in
   match urlencoded with
   | [ ("_csrf", _); ("email", [ email ]); ("password", [ password ]) ] ->
-    let* user = Service.User.login ~email ~password in
+    let* user = Service.User.login email ~password in
     (match user with
     | Ok user ->
       Sihl.Web.Response.redirect_to "/ingredients"
@@ -55,7 +55,7 @@ let registration_create req =
     ; ("password_confirmation", [ password_confirmation ])
     ] ->
     let* user =
-      Service.User.register_user ~email ~password ~password_confirmation ()
+      Service.User.register_user email ~password ~password_confirmation
     in
     (match user with
     | Ok user ->

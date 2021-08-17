@@ -139,7 +139,9 @@ let suite =
 ;;
 
 let services =
-  [ Sihl.Database.register (); Sihl.Database.Migration.PostgreSql.register () ]
+  [ Sihl.Database.register ()
+  ; Sihl.Database.Migration.PostgreSql.register [ Database.Pizza.migration ]
+  ]
 ;;
 
 let () =
@@ -151,6 +153,5 @@ let () =
   Logs.set_reporter (Sihl.Log.cli_reporter ());
   Lwt_main.run
     (let* _ = Sihl.Container.start_services services in
-     let* () = Service.Migration.execute [ Database.Pizza.migration ] in
      Alcotest_lwt.run "tests" suite)
 ;;
