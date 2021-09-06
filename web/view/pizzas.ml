@@ -2,8 +2,8 @@ open Tyxml
 
 let create_form csrf ingredients =
   let ingredients_options =
-    List.map
-      ~f:(fun (ingredient : Pizza.ingredient) ->
+    Stdlib.List.map
+      (fun (ingredient : Pizza.ingredient) ->
         [%html
           {|<option value="|}
             ingredient.Pizza.name
@@ -53,11 +53,11 @@ let index
     (ingredients : Pizza.ingredient list)
   =
   let list_items =
-    List.map
-      ~f:(fun (pizza : Pizza.t) ->
+    Stdlib.List.map
+      (fun (pizza : Pizza.t) ->
         let ingredients_list =
-          List.map
-            ~f:(fun (ingredient : string) ->
+          Stdlib.List.map
+            (fun (ingredient : string) ->
               [%html {|<li>|} [ Html.txt ingredient ] {|</li>|}])
             pizza.Pizza.ingredients
         in

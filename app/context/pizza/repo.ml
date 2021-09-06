@@ -171,8 +171,8 @@ let find_pizza name =
   in
   let* ingredients = find_ingredients_of_pizza name in
   let ingredients =
-    List.map
-      ~f:(fun (ingredient : Model.ingredient) -> ingredient.Model.name)
+    Stdlib.List.map
+      (fun (ingredient : Model.ingredient) -> ingredient.Model.name)
       ingredients
   in
   Lwt.return
@@ -206,8 +206,8 @@ let find_pizzas () : Model.t list Lwt.t =
     (fun (name, created_at, updated_at) ->
       let* ingredients = find_ingredients_of_pizza name in
       let ingredients =
-        List.map
-          ~f:(fun (ingredient : Model.ingredient) -> ingredient.Model.name)
+        Stdlib.List.map
+          (fun (ingredient : Model.ingredient) -> ingredient.Model.name)
           ingredients
       in
       Lwt.return Model.{ name; ingredients; created_at; updated_at })
