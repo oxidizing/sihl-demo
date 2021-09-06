@@ -31,27 +31,28 @@ let show req =
 let create req =
   let open Lwt.Syntax in
   let* name = Sihl.Web.Request.urlencoded "name" req in
-  match name with
-  | None ->
+  let* ingredients = Sihl.Web.Request.urlencoded_list "ingredients" req in
+  let error =
+    match name, ingredients with
+    | None, _ | Some "", _ -> Some "Invalid input provided"
+    | _, [] -> Some "Please select at least one ingredient"
+    | _ -> None
+  in
+  match error with
+  | Some error ->
     Sihl.Web.Response.redirect_to "/pizzas"
-    |> Sihl.Web.Flash.set_alert "Invalid input provided"
+    |> Sihl.Web.Flash.set_alert error
     |> Lwt.return
-  | Some name ->
-    let* ingredients = Sihl.Web.Request.urlencoded_list "ingredients" req in
-    if List.length ingredients < 1
-    then
+  | None ->
+    let* pizza =
+      Pizza.create_pizza (CCOpt.value name ~default:"") ingredients
+    in
+    (match pizza with
+    | pizza ->
       Sihl.Web.Response.redirect_to "/pizzas"
       |> Sihl.Web.Flash.set_notice
-           (Format.sprintf "Please select at least one ingredient")
-      |> Lwt.return
-    else
-      let* pizza = Pizza.create_pizza name ingredients in
-      (match pizza with
-      | pizza ->
-        Sihl.Web.Response.redirect_to "/pizzas"
-        |> Sihl.Web.Flash.set_notice
-             (Format.sprintf "Pizza '%s' added" pizza.Pizza.name)
-        |> Lwt.return)
+           (Format.sprintf "Pizza '%s' added" pizza.Pizza.name)
+      |> Lwt.return)
 ;;
 
 let delete req =
